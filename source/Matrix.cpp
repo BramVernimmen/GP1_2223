@@ -104,7 +104,7 @@ namespace dae {
 
 	Matrix Matrix::CreateTranslation(float x, float y, float z)
 	{
-		//todo W1
+		//todo W1 - Matrix CreateTranslation
 		assert(false && "Not Implemented Yet");
 		return {};
 	}
@@ -116,28 +116,28 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationX(float pitch)
 	{
-		//todo W1
+		//todo W1 - Matrix CreateRotationX
 		assert(false && "Not Implemented Yet");
 		return {};
 	}
 
 	Matrix Matrix::CreateRotationY(float yaw)
 	{
-		//todo W1
+		//todo W1 - Matrix CreateRotationY
 		assert(false && "Not Implemented Yet");
 		return {};
 	}
 
 	Matrix Matrix::CreateRotationZ(float roll)
 	{
-		//todo W1
+		//todo W1 - Matrix CreateRotationZ
 		assert(false && "Not Implemented Yet");
 		return {};
 	}
 
 	Matrix Matrix::CreateRotation(const Vector3& r)
 	{
-		//todo W1
+		//todo W1 - Matrix CreateRotation
 		assert(false && "Not Implemented Yet");
 		return {};
 	}
@@ -149,9 +149,9 @@ namespace dae {
 
 	Matrix Matrix::CreateScale(float sx, float sy, float sz)
 	{
-		//todo W1
+		//todo W1 - Matrix CreateScale
 		assert(false && "Not Implemented Yet");
-		return {};
+		return { {sx,0,0}, {0,sy,0}, {0,0,sz},{0,0,0} }; // just a quick test I guess
 	}
 
 	Matrix Matrix::CreateScale(const Vector3& s)

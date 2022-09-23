@@ -28,8 +28,17 @@ namespace dae {
 
 	void dae::Scene::GetClosestHit(const Ray& ray, HitRecord& closestHit) const
 	{
-		//todo W1
-		assert(false && "No Implemented Yet!");
+		//todo DONE: W1 - Scene GetClosestHit   (spheres, planes)
+		for (int i{0}; i < m_SphereGeometries.size(); ++i)
+		{
+			GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray, closestHit);
+		}
+
+		for (int i{ 0 }; i < m_PlaneGeometries.size(); ++i)
+		{
+			GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray, closestHit);
+		}
+		//assert(false && "No Implemented Yet!");
 	}
 
 	bool Scene::DoesHit(const Ray& ray) const
@@ -107,7 +116,7 @@ namespace dae {
 #pragma region SCENE W1
 	void Scene_W1::Initialize()
 	{
-				//default: Material id0 >> SolidColor Material (RED)
+		//default: Material id0 >> SolidColor Material (RED)
 		constexpr unsigned char matId_Solid_Red = 0;
 		const unsigned char matId_Solid_Blue = AddMaterial(new Material_SolidColor{ colors::Blue });
 
