@@ -16,11 +16,13 @@ namespace dae
 			origin{_origin},
 			fovAngle{_fovAngle}
 		{
+			UpdateFOVScaleFactor();
 		}
 
 
 		Vector3 origin{};
 		float fovAngle{90.f};
+		float fovScaleFactor{ 0.f }; 
 
 		Vector3 forward{Vector3::UnitZ};
 		Vector3 up{Vector3::UnitY};
@@ -52,7 +54,14 @@ namespace dae
 			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
 			//todo: W2
+			// IMPLEMENT FOV INCREASE/DECREASE ON KEYPRESSED
+			// 
 			//assert(false && "Not Implemented Yet");
+		}
+
+		void UpdateFOVScaleFactor()
+		{
+			fovScaleFactor = tanf(fovAngle * TO_RADIANS / 2);
 		}
 	};
 }
