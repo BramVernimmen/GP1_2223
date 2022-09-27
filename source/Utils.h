@@ -21,17 +21,11 @@ namespace dae
 			if (discriminant == 0) // 1 hit
 			{
 				float t1{ -b / (2 * a) };
-				if (hitRecord.didHit == true && hitRecord.t > t1)
-				{
-					hitRecord.materialIndex = sphere.materialIndex;
-					hitRecord.t = t1;
-				}
-				else
-				{
-					hitRecord.didHit = true;
-					hitRecord.materialIndex = sphere.materialIndex;
-					hitRecord.t = t1;
-				}
+				
+				hitRecord.didHit = true;
+				hitRecord.materialIndex = sphere.materialIndex;
+				hitRecord.t = t1;
+				
 			}
 			else if (discriminant > 0) // 2 hits
 			{
@@ -39,35 +33,19 @@ namespace dae
 
 				float t1{(-b + discriminant) / 2 * a};
 				float t2{ (-b - discriminant) / 2 * a };
-				if (hitRecord.didHit == true && hitRecord.t > t2)
+				
+				if (t1 < t2)
 				{
-					if (t1 < t2)
-					{
-						hitRecord.t = t1;
-					}
-					else
-					{
-						hitRecord.t = t2;
-					}
-					hitRecord.materialIndex = sphere.materialIndex;
+					hitRecord.t = t1;
 				}
-				else if(hitRecord.didHit == false)
+				else
 				{
-					if (t1 < t2)
-					{
-						hitRecord.t = t1;
-					}
-					else
-					{
-						hitRecord.t = t2;
-					}
-					hitRecord.didHit = true;
-					hitRecord.materialIndex = sphere.materialIndex;
+					hitRecord.t = t2;
 				}
-
+				hitRecord.didHit = true;
+				hitRecord.materialIndex = sphere.materialIndex;
+				
 			}
-
-			//assert(false && "No Implemented Yet!");
 			return hitRecord.didHit;
 		}
 
@@ -82,8 +60,6 @@ namespace dae
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 			//todo DONE: W1 - HitTest_Plane
-			//assert(false && "No Implemented Yet!");
-
 			float t1{ Vector3::Dot((plane.origin - ray.origin), plane.normal) / Vector3::Dot(ray.direction, plane.normal) };
 			if (hitRecord.didHit == true && hitRecord.t > t1)
 			{
