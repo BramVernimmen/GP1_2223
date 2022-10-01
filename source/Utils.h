@@ -15,25 +15,29 @@ namespace dae
 			//todo DONE: W1 - HitTest_Sphere
 			float a{ Vector3::Dot(ray.direction, ray.direction) };
 			float b{ Vector3::Dot((2.f * ray.direction), (ray.origin - sphere.origin)) };
-			float c{ Vector3::Dot((ray.origin - sphere.origin), (ray.origin - sphere.origin)) - (sphere.radius * sphere.radius)};
+			float c{ Vector3::Dot((ray.origin - sphere.origin), (ray.origin - sphere.origin)) - (sphere.radius * sphere.radius) };
 
 			float discriminant{ (b * b) - 4 * a * c };
 			if (discriminant == 0) // 1 hit
 			{
 				float t1{ -b / (2 * a) };
-				
-				hitRecord.didHit = true;
-				hitRecord.materialIndex = sphere.materialIndex;
-				hitRecord.t = t1;
-				
+				if (t1 > ray.min && t1 <= ray.max)
+				{
+					hitRecord.origin = ray.origin + (ray.direction * t1);
+					hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
+					hitRecord.materialIndex = sphere.materialIndex;
+					hitRecord.t = t1;
+					hitRecord.didHit = true;
+				}
+
 			}
 			else if (discriminant > 0) // 2 hits
 			{
 				discriminant = sqrt(discriminant);
 
-				float t1{(-b + discriminant) / 2 * a};
-				float t2{ (-b - discriminant) / 2 * a };
-				
+				float t1{ (-b + discriminant) / (2 * a) };
+				float t2{ (-b - discriminant) / (2 * a) };
+
 				if (t1 < t2)
 				{
 					hitRecord.t = t1;
@@ -42,9 +46,19 @@ namespace dae
 				{
 					hitRecord.t = t2;
 				}
-				hitRecord.didHit = true;
-				hitRecord.materialIndex = sphere.materialIndex;
-				
+
+				if (hitRecord.t > ray.min && hitRecord.t <= ray.max)
+				{
+					hitRecord.origin = ray.origin + (ray.direction * hitRecord.t);
+					hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
+					hitRecord.materialIndex = sphere.materialIndex;
+					hitRecord.didHit = true;
+				}
+				else
+				{
+					return false;
+				}
+
 			}
 			return hitRecord.didHit;
 		}
@@ -60,26 +74,16 @@ namespace dae
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 			//todo DONE: W1 - HitTest_Plane
-			float t1{ Vector3::Dot((plane.origin - ray.origin), plane.normal) / Vector3::Dot(ray.direction, plane.normal) };
-			if (hitRecord.didHit == true && hitRecord.t > t1)
-			{
-				if (t1 > ray.min && t1 <= ray.max)
-				{
-					hitRecord.t = t1;
-					hitRecord.materialIndex = plane.materialIndex;
-				}
-			}
-			else if (hitRecord.didHit == false)
-			{
-				if (t1 > ray.min && t1 <= ray.max)
-				{
-					hitRecord.didHit = true;
-					hitRecord.t = t1;
-					hitRecord.materialIndex = plane.materialIndex;
-				}
-			}
 			
-
+			float t1{ Vector3::Dot((plane.origin - ray.origin), plane.normal) / Vector3::Dot(ray.direction, plane.normal) };
+			if (t1 > ray.min && t1 <= ray.max)
+			{
+				hitRecord.normal = plane.normal;
+				hitRecord.origin = ray.origin + (ray.direction * t1);
+				hitRecord.t = t1;
+				hitRecord.materialIndex = plane.materialIndex;
+				hitRecord.didHit = true;
+			}
 			return hitRecord.didHit;
 		}
 
@@ -125,9 +129,15 @@ namespace dae
 		//Direction from target to light
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
-			//todo W3
-			assert(false && "No Implemented Yet!");
-			return {};
+			//todo DONE: W2 - GetDirectionToLight
+			if (light.type == LightType::Point)
+			{
+				return { light.origin - origin };
+			}
+			else
+			{
+				return {};
+			}
 		}
 
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)

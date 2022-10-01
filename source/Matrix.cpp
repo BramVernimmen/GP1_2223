@@ -104,9 +104,11 @@ namespace dae {
 
 	Matrix Matrix::CreateTranslation(float x, float y, float z)
 	{
-		//todo W2 - Matrix CreateTranslation
-		assert(false && "Not Implemented Yet");
-		return {};
+		//todo DONE: W2 - Matrix CreateTranslation
+		//assert(false && "Not Implemented Yet");
+		// return { {1,0,0,0},{0,1,0,0},{0,0,1,0},{x,y,z,1} };
+		// or 
+		return CreateTranslation({ x,y,z });
 	}
 
 	Matrix Matrix::CreateTranslation(const Vector3& t)
@@ -116,30 +118,30 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationX(float pitch)
 	{
-		//todo W2 - Matrix CreateRotationX
-		assert(false && "Not Implemented Yet");
-		return {};
+		//todo DONE: W2 - Matrix CreateRotationX
+		//assert(false && "Not Implemented Yet");
+		return { {1,0,0},{0,cosf(pitch),-sinf(pitch)},{0,sinf(pitch),cosf(pitch)},{0,0,0} };
 	}
 
 	Matrix Matrix::CreateRotationY(float yaw)
 	{
-		//todo W2 - Matrix CreateRotationY
-		assert(false && "Not Implemented Yet");
-		return {};
+		//todo DONE: W2 - Matrix CreateRotationY
+		//assert(false && "Not Implemented Yet");
+		return { {cosf(yaw),0,-sin(yaw)},{0,1,0},{sinf(yaw),0,cosf(yaw)},{0,0,0}};
 	}
 
 	Matrix Matrix::CreateRotationZ(float roll)
 	{
-		//todo W2 - Matrix CreateRotationZ
-		assert(false && "Not Implemented Yet");
-		return {};
+		//todo DONE: W2 - Matrix CreateRotationZ
+		//assert(false && "Not Implemented Yet");
+		return { {cosf(roll), sinf(roll),0},{-sinf(roll),cosf(roll),0},{0,0,1},{0,0,0}};
 	}
 
 	Matrix Matrix::CreateRotation(const Vector3& r)
 	{
-		//todo W2 - Matrix CreateRotation
-		assert(false && "Not Implemented Yet");
-		return {};
+		//todo DONE: W2 - Matrix CreateRotation
+		//assert(false && "Not Implemented Yet");
+		return CreateRotationZ(r[2]) * CreateRotationY(r[1]) * CreateRotationX(r[0]);
 	}
 
 	Matrix Matrix::CreateRotation(float pitch, float yaw, float roll)
@@ -149,9 +151,9 @@ namespace dae {
 
 	Matrix Matrix::CreateScale(float sx, float sy, float sz)
 	{
-		//todo W2 - Matrix CreateScale
-		assert(false && "Not Implemented Yet");
-		return { {sx,0,0}, {0,sy,0}, {0,0,sz},{0,0,0} }; // just a quick test I guess
+		//todo DONE: W2 - Matrix CreateScale
+		//assert(false && "Not Implemented Yet");
+		return { {sx,0,0}, {0,sy,0}, {0,0,sz},{0,0,0} };
 	}
 
 	Matrix Matrix::CreateScale(const Vector3& s)

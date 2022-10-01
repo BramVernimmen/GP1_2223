@@ -24,6 +24,7 @@ Renderer::Renderer(SDL_Window * pWindow) :
 void Renderer::Render(Scene* pScene) const
 {
 	Camera& camera = pScene->GetCamera();
+	const Matrix cameraToWorld = camera.CalculateCameraToWorld();
 	auto& materials = pScene->GetMaterials();
 	auto& lights = pScene->GetLights();
 
@@ -36,7 +37,9 @@ void Renderer::Render(Scene* pScene) const
 			float cx{ ((2.f * (px + 0.5f)) / m_Width - 1) * aspectRatio * camera.fovScaleFactor};
 			float cy{ (1.f - ((2.f * (py + 0.5f)) / m_Height)) * camera.fovScaleFactor };
 			
-			Vector3 rayDirection{ (cx * camera.right) + (cy * camera.up) + camera.forward };
+			//Vector3 rayDirection{ (cx * camera.right) + (cy * camera.up) + camera.forward };
+			Vector3 rayDirection{ cx, cy , 1 };
+			rayDirection = cameraToWorld.TransformVector(rayDirection);
 			rayDirection.Normalize();
 			
 			Ray viewRay{ camera.origin, rayDirection };
@@ -50,6 +53,22 @@ void Renderer::Render(Scene* pScene) const
 			if (closestHit.didHit)
 			{
 				finalColor = materials[closestHit.materialIndex]->Shade();
+				closestHit.origin += closestHit.normal * 0.0001f; // Use small offset for the ray origin (self-shadowing)
+				for (size_t i{0}; i < lights.size(); ++i)
+				{
+					Vector3 lightDirection{ LightUtils::GetDirectionToLight(lights[i], closestHit.origin)};
+				
+					Ray invLightRay{}; // W2 slide 25
+					invLightRay.origin = closestHit.origin;
+					invLightRay.direction = lightDirection;
+					invLightRay.direction.Normalize();
+					invLightRay.max = lightDirection.Magnitude();
+				
+					if (pScene->DoesHit(invLightRay))
+					{
+						finalColor *= 0.5f;
+					}
+				}
 			}
 
 

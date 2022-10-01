@@ -6,6 +6,7 @@
 #include "Math.h"
 #include "Timer.h"
 
+#include <iostream>
 namespace dae
 {
 	struct Camera
@@ -25,26 +26,33 @@ namespace dae
 		float fovScaleFactor{ 0.f }; 
 
 		Vector3 forward{Vector3::UnitZ};
+		//Vector3 forward{0.266f, -0.453f, 0.860f};
 		Vector3 up{Vector3::UnitY};
 		Vector3 right{Vector3::UnitX};
 
 		float totalPitch{0.f};
 		float totalYaw{0.f};
 
+
 		Matrix cameraToWorld{};
 
 
 		Matrix CalculateCameraToWorld()
 		{
-			//todo: W2
-			assert(false && "Not Implemented Yet");
-			return {};
+			//todo DONE: W2 - CalculateCameraToWorld
+			//assert(false && "Not Implemented Yet");
+			Vector3 tempRight{ (Vector3::Cross(Vector3::UnitY, forward)) };
+			tempRight.Normalize();
+			Vector3 tempUp{ (Vector3::Cross(forward, tempRight)) };
+			tempUp.Normalize();
+			return { {tempRight},{tempUp},{forward},{origin} };
 		}
 
 		void Update(Timer* pTimer)
 		{
 			const float deltaTime = pTimer->GetElapsed();
-
+			float movementSpeed{ 25.f };
+			float rotationSpeed{ 10.f * TO_RADIANS };
 			//Keyboard Input
 			const uint8_t* pKeyboardState = SDL_GetKeyboardState(nullptr);
 
@@ -53,10 +61,74 @@ namespace dae
 			int mouseX{}, mouseY{};
 			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
-			//todo: W2
-			// IMPLEMENT FOV INCREASE/DECREASE ON KEYPRESSED
-			// 
-			//assert(false && "Not Implemented Yet");
+			//todo DONE: W2 - Update Camera
+
+			// Speeding up all movement
+			if (pKeyboardState[SDL_SCANCODE_LSHIFT] || pKeyboardState[SDL_SCANCODE_RSHIFT])
+			{
+				movementSpeed *= 4.f;
+				rotationSpeed *= 4.f;
+			}
+
+			// In/decreasing FOV
+			if (pKeyboardState[SDL_SCANCODE_LEFT])
+			{
+				if (fovAngle > 0.5f)
+				{
+					fovAngle -= movementSpeed * deltaTime;
+					UpdateFOVScaleFactor();
+				}
+			}
+			else if (pKeyboardState[SDL_SCANCODE_RIGHT])
+			{
+				if (fovAngle < 179.5f)
+				{
+					fovAngle += movementSpeed * deltaTime;
+					UpdateFOVScaleFactor();
+				}
+			}
+
+			// Moving origin with "WASD"
+			if (pKeyboardState[SDL_SCANCODE_W])
+			{
+				origin += forward * (movementSpeed * deltaTime);
+			}
+			else if (pKeyboardState[SDL_SCANCODE_S])
+			{
+				origin -= forward * (movementSpeed * deltaTime);
+			}
+			if (pKeyboardState[SDL_SCANCODE_D])
+			{
+				origin += right * (movementSpeed * deltaTime);
+			}
+			else if (pKeyboardState[SDL_SCANCODE_A])
+			{
+				origin -= right * (movementSpeed * deltaTime);
+			}
+
+			
+			if (mouseState == SDL_BUTTON_LMASK)
+			{
+				
+				origin += forward * -(static_cast<float>(mouseY) * movementSpeed * deltaTime) ;
+				totalYaw += static_cast<float>(mouseX) * rotationSpeed * deltaTime;
+			}
+			else if (mouseState == SDL_BUTTON_RMASK)
+			{
+				totalYaw += static_cast<float>(mouseX) * rotationSpeed * deltaTime;
+				totalPitch += -(static_cast<float>(mouseY)) * rotationSpeed * deltaTime;
+
+			}
+			else if (mouseState == (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK))
+			{
+				origin += up * -((movementSpeed / 2.f ) * static_cast<float>(mouseY) * deltaTime);
+			}
+
+			Matrix finalRotation = Matrix::CreateRotation(totalPitch, totalYaw, 0.f);
+
+			forward = finalRotation.TransformVector(Vector3::UnitZ);
+			forward.Normalize();
+			
 		}
 
 		void UpdateFOVScaleFactor()

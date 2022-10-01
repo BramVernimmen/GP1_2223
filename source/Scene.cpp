@@ -30,7 +30,7 @@ namespace dae {
 	{
 		//todo DONE: W1 - Scene GetClosestHit   (spheres, planes)
 		HitRecord tempHit{};
-		for (int i{0}; i < m_SphereGeometries.size(); ++i)
+		for (size_t i{0}; i < m_SphereGeometries.size(); ++i)
 		{
 			GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray, tempHit);
 			if (tempHit.t < closestHit.t)
@@ -39,9 +39,9 @@ namespace dae {
 			}
 		}
 
-		for (int i{ 0 }; i < m_PlaneGeometries.size(); ++i)
+		for (size_t i{ 0 }; i < m_PlaneGeometries.size(); ++i)
 		{
-			GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray, closestHit);
+			GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray, tempHit);
 			if (tempHit.t < closestHit.t)
 			{
 				closestHit = tempHit;
@@ -51,8 +51,22 @@ namespace dae {
 
 	bool Scene::DoesHit(const Ray& ray) const
 	{
-		//todo W3
-		assert(false && "No Implemented Yet!");
+		//todo DONE: W2 - Does Hit
+		for (size_t i{ 0 }; i < m_SphereGeometries.size(); ++i)
+		{
+			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray))
+			{
+				return true;
+			}
+		}
+
+		for (size_t i{ 0 }; i < m_PlaneGeometries.size(); ++i)
+		{
+			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray))
+			{
+				return true;
+			}
+		}
 		return false;
 	}
 
