@@ -45,15 +45,11 @@ namespace dae {
 
 	float Vector3::Dot(const Vector3& v1, const Vector3& v2)
 	{
-		//todo DONE: W1 - Vector3 Dot
-		float dotResult{};
-		dotResult = (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
-		return dotResult;
+		return ((v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z));
 	}
 
 	Vector3 Vector3::Cross(const Vector3& v1, const Vector3& v2)
 	{
-		//todo DONE: W1 - Vector3 Cross
 		Vector3 crossResult{};
 		crossResult.x = (v1.y * v2.z) - (v1.z * v2.y);
 		crossResult.y = -((v1.x * v2.z) - (v1.z * v2.x));

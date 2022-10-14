@@ -39,8 +39,6 @@ namespace dae
 
 		Matrix CalculateCameraToWorld()
 		{
-			//todo DONE: W2 - CalculateCameraToWorld
-			//assert(false && "Not Implemented Yet");
 			Vector3 tempRight{ (Vector3::Cross(Vector3::UnitY, forward)) };
 			tempRight.Normalize();
 			Vector3 tempUp{ (Vector3::Cross(forward, tempRight)) };
@@ -61,7 +59,9 @@ namespace dae
 			int mouseX{}, mouseY{};
 			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
-			//todo DONE: W2 - Update Camera
+
+			// using a lot of if statements might not be optimal
+
 
 			// Speeding up all movement
 			if (pKeyboardState[SDL_SCANCODE_LSHIFT] || pKeyboardState[SDL_SCANCODE_RSHIFT])
@@ -89,23 +89,13 @@ namespace dae
 			}
 
 			// Moving origin with "WASD"
-			if (pKeyboardState[SDL_SCANCODE_W])
-			{
-				origin += forward * (movementSpeed * deltaTime);
-			}
-			else if (pKeyboardState[SDL_SCANCODE_S])
-			{
-				origin -= forward * (movementSpeed * deltaTime);
-			}
-			if (pKeyboardState[SDL_SCANCODE_D])
-			{
-				origin += right * (movementSpeed * deltaTime);
-			}
-			else if (pKeyboardState[SDL_SCANCODE_A])
-			{
-				origin -= right * (movementSpeed * deltaTime);
-			}
+			// updates with no more if statements
 
+			origin += forward * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_W]);
+			origin -= forward * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_S]);
+			origin += right * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_D]);
+			origin -= right * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_A]);
+			
 			
 			if (mouseState == SDL_BUTTON_LMASK)
 			{

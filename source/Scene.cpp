@@ -28,7 +28,6 @@ namespace dae {
 
 	void dae::Scene::GetClosestHit(const Ray& ray, HitRecord& closestHit) const
 	{
-		//todo DONE: W1 - Scene GetClosestHit   (spheres, planes)
 		HitRecord tempHit{};
 		for (size_t i{0}; i < m_SphereGeometries.size(); ++i)
 		{
@@ -51,7 +50,6 @@ namespace dae {
 
 	bool Scene::DoesHit(const Ray& ray) const
 	{
-		//todo DONE: W2 - Does Hit
 		for (size_t i{ 0 }; i < m_SphereGeometries.size(); ++i)
 		{
 			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray))

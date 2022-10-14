@@ -12,55 +12,62 @@ namespace dae
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo DONE: W1 - HitTest_Sphere
-			float a{ Vector3::Dot(ray.direction, ray.direction) };
-			float b{ Vector3::Dot((2.f * ray.direction), (ray.origin - sphere.origin)) };
-			float c{ Vector3::Dot((ray.origin - sphere.origin), (ray.origin - sphere.origin)) - (sphere.radius * sphere.radius) };
+			// calculating this prior, reused a lot
+			const Vector3 raySphereOriginVector{ ray.origin - sphere.origin };
 
-			float discriminant{ (b * b) - 4 * a * c };
-			if (discriminant == 0) // 1 hit
+			const float a{ Vector3::Dot(ray.direction, ray.direction) };
+			const float b{ Vector3::Dot((2.f * ray.direction), raySphereOriginVector) };
+			const float c{ Vector3::Dot(raySphereOriginVector, raySphereOriginVector) - (sphere.radius * sphere.radius) };
+
+			float discriminant{ (b * b) - 4.f * a * c };
+
+			if (discriminant < 0)
 			{
-				float t1{ -b / (2 * a) };
-				if (t1 > ray.min && t1 <= ray.max)
-				{
-					hitRecord.origin = ray.origin + (ray.direction * t1);
-					hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
-					hitRecord.materialIndex = sphere.materialIndex;
-					hitRecord.t = t1;
-					hitRecord.didHit = true;
-				}
-
+				return false;
 			}
-			else if (discriminant > 0) // 2 hits
+
+			// take square root of discriminant
+			discriminant = sqrt(discriminant);
+
+
+			// calculating distance
+			float t{ (- b - discriminant) / (2.f * a)};
+
+			if (t <= ray.min || t > ray.max) // check if distance is outside of range
 			{
-				discriminant = sqrt(discriminant);
-
-				float t1{ (-b + discriminant) / (2 * a) };
-				float t2{ (-b - discriminant) / (2 * a) };
-
-				if (t1 < t2)
+				// first result is out of range if we get here
+				t = ((- b + discriminant) / (2.f * a));
+				if (t <= ray.min || t > ray.max)
 				{
-					hitRecord.t = t1;
+					return false; // both are out of range; nothing is visible
 				}
-				else
-				{
-					hitRecord.t = t2;
-				}
-
-				if (hitRecord.t > ray.min && hitRecord.t <= ray.max)
-				{
-					hitRecord.origin = ray.origin + (ray.direction * hitRecord.t);
-					hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
-					hitRecord.materialIndex = sphere.materialIndex;
-					hitRecord.didHit = true;
-				}
-				else
-				{
-					return false;
-				}
-
 			}
-			return hitRecord.didHit;
+
+
+			// explanation:
+			// if we take a look at { -b - discriminant / (2.f * a) } and { -b + discriminant / (2.f * a) }
+			// the square root of a value will always be positive
+			// if we subtract this value, the result will always be smaller than the addition
+			// meaning that if we first check the subtraction and it is in range, it will be the smallest possible
+
+
+
+			// code underneath just confuses me, currently keeping it out
+			//// if need to be ignored, just return
+			//if (ignoreHitRecord)
+			//{
+			//	return true; // false removes shading
+			//}
+
+
+			// calculate the hitRecord info
+			hitRecord.t = t;
+			hitRecord.origin = ray.origin + (ray.direction * hitRecord.t);
+			hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
+			hitRecord.materialIndex = sphere.materialIndex;
+			hitRecord.didHit = true;
+
+			return true;
 		}
 
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray)
@@ -73,17 +80,23 @@ namespace dae
 		//PLANE HIT-TESTS
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo DONE: W1 - HitTest_Plane
-			
-			float t1{ Vector3::Dot((plane.origin - ray.origin), plane.normal) / Vector3::Dot(ray.direction, plane.normal) };
-			if (t1 > ray.min && t1 <= ray.max)
+			// code underneath just confuses me, currently keeping it out
+			//// if need to be ignored, just return
+			//if (ignoreHitRecord)
+			//{
+			//	return false; // using true makes whole screen shaded
+			//}
+			float t{ Vector3::Dot((plane.origin - ray.origin), plane.normal) / Vector3::Dot(ray.direction, plane.normal) };
+			if (t > ray.min && t <= ray.max)
 			{
 				hitRecord.normal = plane.normal;
-				hitRecord.origin = ray.origin + (ray.direction * t1);
-				hitRecord.t = t1;
+				hitRecord.origin = ray.origin + (ray.direction * t);
+				hitRecord.t = t;
 				hitRecord.materialIndex = plane.materialIndex;
 				hitRecord.didHit = true;
 			}
+
+
 			return hitRecord.didHit;
 		}
 
@@ -129,20 +142,22 @@ namespace dae
 		//Direction from target to light
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
-			//todo DONE: W2 - GetDirectionToLight
-			if (light.type == LightType::Point)
+			switch (light.type)
 			{
-				return { light.origin - origin };
+			case LightType::Point:
+				return { light.origin - origin }; // direction of the light
+				break; // safety break I guess
+			case LightType::Directional:
+				return -(light.direction);
+				break; // safety break I guess
 			}
-			else
-			{
-				return {};
-			}
+
+			return {};
 		}
 
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)
 		{
-			//todo W3
+			//todo W3 - Lights - GetRadiance
 			assert(false && "No Implemented Yet!");
 			return {};
 		}
