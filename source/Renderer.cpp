@@ -52,22 +52,56 @@ void Renderer::Render(Scene* pScene) const
 
 			if (closestHit.didHit)
 			{
-				finalColor = materials[closestHit.materialIndex]->Shade();
-				closestHit.origin += closestHit.normal * 0.0001f; // Use small offset for the ray origin (self-shadowing)
+				//finalColor = materials[closestHit.materialIndex]->Shade();
+				const Vector3 originOffset{ closestHit.origin + closestHit.normal * 0.0001f }; // Use small offset for the ray origin (self-shadowing)
 				for (size_t i{0}; i < lights.size(); ++i)
 				{
-					Vector3 lightDirection{ LightUtils::GetDirectionToLight(lights[i], closestHit.origin)};
-				
-					Ray invLightRay{}; // W2 slide 25
-					invLightRay.origin = closestHit.origin;
-					invLightRay.direction = lightDirection;
-					invLightRay.direction.Normalize();
-					invLightRay.max = lightDirection.Magnitude();
-				
-					if (pScene->DoesHit(invLightRay))
+					Vector3 lightDirection{ LightUtils::GetDirectionToLight(lights[i], originOffset)};
+					const float lightDistance{ lightDirection.Normalize() }; // normalizing the vector returns the distance
+					const float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection) }; // angle between normal and light direction (cosine theta)
+					if (normalLightAngle < 0)
+						continue;
+
+					if (m_ShadowsEnabled)
 					{
-						finalColor *= 0.5f;
+						Ray invLightRay{}; // W2 slide 25
+						invLightRay.origin = originOffset;
+						invLightRay.direction = lightDirection;
+						invLightRay.max = lightDistance;
+
+						if (pScene->DoesHit(invLightRay))
+							continue;
+						
 					}
+					
+					switch (m_CurrentLightingMode)
+					{
+					case dae::Renderer::LightingMode::ObservedArea:
+						// only multiply if normalLightAngle is bigger then 0, replacement of if statement
+						finalColor += ColorRGB{ 1.f, 1.f, 1.f } * normalLightAngle;
+						break;
+					case dae::Renderer::LightingMode::Radiance:
+						finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin);
+						break;
+					case dae::Renderer::LightingMode::BRDF:
+						finalColor += materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, rayDirection);
+						break;
+					case dae::Renderer::LightingMode::Combined:
+					{
+						// formula getting too long, making variables...
+						const ColorRGB radiance{ LightUtils::GetRadiance(lights[i], closestHit.origin) };
+						const ColorRGB brdf{ materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, rayDirection) };
+
+						finalColor += radiance * brdf * normalLightAngle;
+					}
+						break;
+					}
+
+
+					
+
+
+
 				}
 			}
 
@@ -91,4 +125,9 @@ void Renderer::Render(Scene* pScene) const
 bool Renderer::SaveBufferToImage() const
 {
 	return SDL_SaveBMP(m_pBuffer, "RayTracing_Buffer.bmp");
+}
+
+void dae::Renderer::CycleLightingMode()
+{
+	m_CurrentLightingMode = LightingMode((static_cast<int>(m_CurrentLightingMode) + 1) % 4 ); // add one to current value, if it is 4, will reset to 0
 }

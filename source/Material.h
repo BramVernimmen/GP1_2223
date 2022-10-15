@@ -59,9 +59,7 @@ namespace dae
 
 		ColorRGB Shade(const HitRecord& hitRecord = {}, const Vector3& l = {}, const Vector3& v = {}) override
 		{
-			//todo: W3 - Shade Lambert
-			assert(false && "Not Implemented Yet");
-			return {};
+			return BRDF::Lambert(m_DiffuseReflectance, m_DiffuseColor);
 		}
 
 	private:
@@ -84,9 +82,8 @@ namespace dae
 
 		ColorRGB Shade(const HitRecord& hitRecord = {}, const Vector3& l = {}, const Vector3& v = {}) override
 		{
-			//todo: W3 - Shade Phong
-			assert(false && "Not Implemented Yet");
-			return {};
+			return BRDF::Lambert(m_DiffuseReflectance, m_DiffuseColor)
+				+ BRDF::Phong(m_SpecularReflectance, m_PhongExponent, l, v, hitRecord.normal);
 		}
 
 	private:
@@ -109,9 +106,38 @@ namespace dae
 
 		ColorRGB Shade(const HitRecord& hitRecord = {}, const Vector3& l = {}, const Vector3& v = {}) override
 		{
-			//todo: W3 - Shade CookTorrence
-			assert(false && "Not Implemented Yet");
-			return {};
+			// to get this to work, we first need to calculate DFG ( Fresnel_Schlik, Trowbridge-Reitz GGX, NormalDistribution_GGX)
+
+			const Vector3 halfVector{ (l - v).Normalized() }; // half vector between view direction and light direction -> normalized
+			const ColorRGB baseReflectivity{ (m_Metalness == 0) ? ColorRGB{0.04f, 0.04f, 0.04f } : m_Albedo }; // short hand if else: variable = (condition) ? expressionTrue : expressionFalse;
+			// baseReflectivity is different for dielectrics and metals; metals get the Albedo value, dielectrics get the base value
+
+			// f
+			const ColorRGB fresnelSchlick{ BRDF::FresnelFunction_Schlick(halfVector, -v, baseReflectivity) };
+			// d
+			const float normalDistribution{ BRDF::NormalDistribution_GGX(hitRecord.normal, halfVector, m_Roughness) };
+			// g
+			const float geometryFunction{ BRDF::GeometryFunction_Smith(hitRecord.normal, -v, l, m_Roughness) };
+
+			const float divisor{ 4 * Vector3::Dot(-v,hitRecord.normal) * Vector3::Dot(l,hitRecord.normal) };
+
+
+
+
+			ColorRGB specular{ fresnelSchlick * normalDistribution * geometryFunction };
+			specular / divisor; // the ColorRGB / operator changes to /=
+
+			ColorRGB lambert{};
+			if (m_Metalness == 0)
+			{
+				lambert = BRDF::Lambert({ 1.f - fresnelSchlick.r, 1.f - fresnelSchlick.g, 1.f - fresnelSchlick.b }, m_Albedo);
+			}
+			else
+			{
+				lambert = BRDF::Lambert(0, m_Albedo);
+			}
+
+			return specular + lambert;
 		}
 
 	private:
