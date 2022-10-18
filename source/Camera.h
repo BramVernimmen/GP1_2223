@@ -43,6 +43,10 @@ namespace dae
 			tempRight.Normalize();
 			Vector3 tempUp{ (Vector3::Cross(forward, tempRight)) };
 			tempUp.Normalize();
+
+			right = tempRight;
+			up = tempUp;
+
 			return { {tempRight},{tempUp},{forward},{origin} };
 		}
 
@@ -91,7 +95,6 @@ namespace dae
 			// Moving origin with "WASD"
 			// updates with no more if statements
 
-			// NEED A CHECK, IF LOOKING BACK THE RIGHT IS INVERSE
 			origin += forward * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_W]);
 			origin -= forward * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_S]);
 			origin += right * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_D]);

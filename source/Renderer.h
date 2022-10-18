@@ -36,7 +36,7 @@ namespace dae
 			Combined = 3 // ObservedArea * Radiance * BRDF -> default
 		};
 
-		LightingMode m_CurrentLightingMode{ LightingMode::BRDF };
+		LightingMode m_CurrentLightingMode{ LightingMode::Combined };
 		bool m_ShadowsEnabled{ true };
 
 		SDL_Window* m_pWindow{};

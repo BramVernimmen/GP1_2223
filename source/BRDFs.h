@@ -50,7 +50,7 @@ namespace dae
 		 */
 		static ColorRGB FresnelFunction_Schlick(const Vector3& h, const Vector3& v, const ColorRGB& f0)
 		{
-			return (f0 + (ColorRGB{1.f, 1.f, 1.f} - f0) * powf((1 - Vector3::Dot(h, v)), 5));
+			return (f0 + (ColorRGB{1.f, 1.f, 1.f} - f0) * powf((1 - (std::max(Vector3::Dot(h, v), 0.0f))), 5));
 		}
 
 		/**
@@ -64,7 +64,7 @@ namespace dae
 		{
 			const float alpha{ roughness * roughness };
 			const float alphaSqrd{ alpha * alpha };
-			const float dot{ Vector3::Dot(n,h) };
+			const float dot{ std::max(Vector3::Dot(n,h), 0.0f) };
 			const float dotSqrd{ dot * dot };
 
 			return alphaSqrd / (PI * Square(dotSqrd * (alphaSqrd - 1) + 1));
@@ -82,7 +82,9 @@ namespace dae
 		{
 			const float alpha{ roughness * roughness };
 			const float kDirect{ (Square(alpha + 1.f) / 8.f) }; // kIndirect would be { (Square(alpha)/2)}
-			return ( Vector3::Dot(n,v) / ((Vector3::Dot(n,v) * (1.f - kDirect) + kDirect)) );
+			const float dotResult{ std::max(Vector3::Dot(n,v), 0.0f) }; // result of dot, not negative
+
+			return (dotResult / ((dotResult * (1.f - kDirect) + kDirect)) );
 		}
 
 		/**
