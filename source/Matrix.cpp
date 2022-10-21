@@ -121,7 +121,7 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationY(float yaw)
 	{
-		return { {cosf(yaw),0,-sin(yaw)},{0,1,0},{sinf(yaw),0,cosf(yaw)},{0,0,0}};
+		return { {cosf(yaw),0,-sinf(yaw)},{0,1,0},{sinf(yaw),0,cosf(yaw)},{0,0,0}};
 	}
 
 	Matrix Matrix::CreateRotationZ(float roll)

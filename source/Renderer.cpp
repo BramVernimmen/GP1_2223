@@ -58,8 +58,8 @@ void Renderer::Render(Scene* pScene) const
 				{
 					Vector3 lightDirection{ LightUtils::GetDirectionToLight(lights[i], originOffset)};
 					const float lightDistance{ lightDirection.Normalize() }; // normalizing the vector returns the distance
-					const float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection) }; // angle between normal and light direction (cosine theta)
-					
+					float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection)}; // angle between normal and light direction (cosine theta)
+
 
 					if (m_ShadowsEnabled)
 					{
@@ -78,8 +78,9 @@ void Renderer::Render(Scene* pScene) const
 					case dae::Renderer::LightingMode::ObservedArea:
 						if (normalLightAngle < 0)
 							continue;
+						//normalLightAngle *= 0.5f;
 						// only multiply if normalLightAngle is bigger then 0, replacement of if statement
-						finalColor += ColorRGB{ 1.f, 1.f, 1.f } * normalLightAngle;
+						finalColor += ColorRGB{ normalLightAngle, normalLightAngle, normalLightAngle };
 						break;
 					case dae::Renderer::LightingMode::Radiance:
 						finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin);

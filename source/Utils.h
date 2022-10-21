@@ -110,9 +110,75 @@ namespace dae
 		//TRIANGLE HIT-TESTS
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo W5
-			assert(false && "No Implemented Yet!");
-			return false;
+			// check if viewray is intersecting with the triangle
+			const float dotProductNormalViewray = Vector3::Dot(triangle.normal, ray.direction);
+			if (dotProductNormalViewray == 0)
+				return false;
+			
+
+			// switch the cullmode because of shadows
+			TriangleCullMode currentCullMode = triangle.cullMode;
+			if (ignoreHitRecord)
+			{
+				switch (currentCullMode)
+				{
+				case TriangleCullMode::FrontFaceCulling:
+					currentCullMode = TriangleCullMode::BackFaceCulling;
+					break;
+				case TriangleCullMode::BackFaceCulling:
+					currentCullMode = TriangleCullMode::FrontFaceCulling;
+					break;
+				}
+			}
+
+
+			// return depending on the culling mode situations
+			switch (currentCullMode)
+			{
+			case TriangleCullMode::FrontFaceCulling:
+				if (dotProductNormalViewray < 0)
+					return false;
+				break;
+			case TriangleCullMode::BackFaceCulling:
+				if (dotProductNormalViewray > 0)
+					return false;
+				break;
+			}
+
+
+			const Vector3 length = ((triangle.v0 + triangle.v1 + triangle.v2) / 3) - ray.origin; // length between triangle center and viewray
+			const float t = Vector3::Dot(length, triangle.normal) / Vector3::Dot(ray.direction, triangle.normal);
+
+
+			// check if t is in range
+			if (t < ray.min || t >= ray.max)
+				return false;
+
+			const Vector3 p = ray.origin + t * ray.direction;
+
+			const Vector3 edgeA = triangle.v1 - triangle.v0;
+			const Vector3 edgeB = triangle.v2 - triangle.v1;
+			const Vector3 edgeC = triangle.v0 - triangle.v2;
+			const Vector3 pointToSideA = p - triangle.v0;
+			const Vector3 pointToSideB = p - triangle.v1;
+			const Vector3 pointToSideC = p - triangle.v2;
+			if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeA, pointToSideA)) < 0)
+				return false;
+			if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeB, pointToSideB)) < 0)
+				return false;
+			if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeC, pointToSideC)) < 0)
+				return false;
+
+			// if we get here, time to fill in the hitrecord and return true
+			hitRecord.normal = triangle.normal;
+			hitRecord.didHit = true;
+			hitRecord.materialIndex = triangle.materialIndex;
+			hitRecord.origin = ray.origin + (ray.direction * t);
+			hitRecord.t = t;
+
+
+			return true;
+
 		}
 
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray)
@@ -124,9 +190,37 @@ namespace dae
 #pragma region TriangeMesh HitTest
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo W5
-			assert(false && "No Implemented Yet!");
-			return false;
+			
+			// Create a triangle to test on
+			Triangle triangle{};
+
+			// Give triangle the same cullMode and material
+			triangle.cullMode = mesh.cullMode;
+			triangle.materialIndex = mesh.materialIndex;
+
+			HitRecord tempHit{};
+
+			// loop each triangle
+			for (int i{ 0 }; i < static_cast<int>(mesh.indices.size() / 3); ++i) // for each triangle
+			{
+				// give the correct position and normal to triangle
+				triangle.v0 = mesh.transformedPositions[mesh.indices[i * 3]] ; // vertex 1
+				triangle.v1 = mesh.transformedPositions[mesh.indices[i * 3 + 1]] ; // vertex 2
+				triangle.v2 = mesh.transformedPositions[mesh.indices[i * 3 + 2]] ; // vertex 3
+				triangle.normal = mesh.transformedNormals[i];
+				if (GeometryUtils::HitTest_Triangle(triangle, ray, tempHit, ignoreHitRecord)) // same as in Scene.cpp -> GetClosestHit
+				{
+					if (tempHit.t < hitRecord.t)
+					{
+						hitRecord = tempHit;
+					}
+
+				}
+
+			}
+
+
+			return hitRecord.didHit;
 		}
 
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)

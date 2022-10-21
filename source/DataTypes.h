@@ -123,20 +123,40 @@ namespace dae
 
 		void CalculateNormals()
 		{
-			assert(false && "No Implemented Yet!");
+			normals.reserve(static_cast<int>(indices.size() / 3));
+
+			for (int i{0}; i < static_cast<int>(indices.size() / 3); ++i) // for each triangle
+			{
+				const Vector3 v0{ positions[indices[i * 3]] }; // vertex 1
+				const Vector3 v1{ positions[indices[i * 3 + 1]] }; // vertex 2
+				const Vector3 v2{ positions[indices[i * 3 + 2]] }; // vertex 3
+
+				const Vector3 a{ v1 - v0 };
+				const Vector3 b{ v2 - v0 };
+
+				normals[i] = Vector3::Cross(a, b).Normalized();
+			}
 		}
 
 		void UpdateTransforms()
 		{
-			assert(false && "No Implemented Yet!");
 			//Calculate Final Transform 
-			//const auto finalTransform = ...
+			const auto finalTransform = scaleTransform * rotationTransform * translationTransform; // TRS matrix
 
-			//Transform Positions (positions > transformedPositions)
-			//...
+			// preps the vector 
+			transformedPositions.reserve(positions.size());
+			transformedNormals.reserve(normals.size());
 
-			//Transform Normals (normals > transformedNormals)
-			//...
+			// transform both and store them at the right index
+			for (int i{0}; i < static_cast<int>(positions.size()); ++i)
+			{
+				transformedPositions[i] = finalTransform.TransformPoint(positions[i]);
+			}
+			for (int i{0}; i < static_cast<int>(normals.size()); ++i)
+			{
+				transformedNormals[i] = finalTransform.TransformVector(normals[i]).Normalized();
+			}
+
 		}
 	};
 #pragma endregion

@@ -51,6 +51,9 @@ namespace dae
 		std::vector<Light> m_Lights{};
 		std::vector<Material*> m_Materials{};
 
+		// Temp (Individual Trangle Testing)
+		//std::vector<Triangle> m_Triangles{};
+
 		Camera m_Camera{};
 
 		Sphere* AddSphere(const Vector3& origin, float radius, unsigned char materialIndex = 0);
@@ -124,5 +127,62 @@ namespace dae
 		Scene_W3& operator=(Scene_W3&&) noexcept = delete;
 
 		void Initialize() override;
+	};
+
+	//+++++++++++++++++++++++++++++++++++++++++
+	//WEEK 4 Test Scene
+	class Scene_W4_TestScene final : public Scene
+	{
+	public:
+		Scene_W4_TestScene() = default;
+		~Scene_W4_TestScene() override = default;
+
+		Scene_W4_TestScene(const Scene_W4_TestScene&) = delete;
+		Scene_W4_TestScene(Scene_W4_TestScene&&) noexcept = delete;
+		Scene_W4_TestScene& operator=(const Scene_W4_TestScene&) = delete;
+		Scene_W4_TestScene& operator=(Scene_W4_TestScene&&) noexcept = delete;
+
+		void Initialize() override;
+		void Update(Timer* pTimer) override;
+	private:
+		TriangleMesh* pMesh{ nullptr };
+	};
+
+
+	//+++++++++++++++++++++++++++++++++++++++++
+	//WEEK 4 - ReferenceScene
+	class Scene_W4_ReferenceScene final : public Scene
+	{
+	public:
+		Scene_W4_ReferenceScene() = default;
+		~Scene_W4_ReferenceScene() override = default;
+
+		Scene_W4_ReferenceScene(const Scene_W4_ReferenceScene&) = delete;
+		Scene_W4_ReferenceScene(Scene_W4_ReferenceScene&&) noexcept = delete;
+		Scene_W4_ReferenceScene& operator=(const Scene_W4_ReferenceScene&) = delete;
+		Scene_W4_ReferenceScene& operator=(Scene_W4_ReferenceScene&&) noexcept = delete;
+
+		void Initialize() override;
+		void Update(Timer* pTimer) override;
+	private:
+		TriangleMesh* m_Meshes[3]{};
+	};
+
+	//+++++++++++++++++++++++++++++++++++++++++
+	//WEEK 4 - BunnyScene
+	class Scene_W4_BunnyScene final : public Scene
+	{
+	public:
+		Scene_W4_BunnyScene() = default;
+		~Scene_W4_BunnyScene() override = default;
+
+		Scene_W4_BunnyScene(const Scene_W4_BunnyScene&) = delete;
+		Scene_W4_BunnyScene(Scene_W4_BunnyScene&&) noexcept = delete;
+		Scene_W4_BunnyScene& operator=(const Scene_W4_BunnyScene&) = delete;
+		Scene_W4_BunnyScene& operator=(Scene_W4_BunnyScene&&) noexcept = delete;
+
+		void Initialize() override;
+	private:
+		TriangleMesh* pMesh{ nullptr };
 	};
 }
