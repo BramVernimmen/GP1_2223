@@ -47,7 +47,8 @@ namespace dae
 			right = tempRight;
 			up = tempUp;
 
-			return { {tempRight},{tempUp},{forward},{origin} };
+			cameraToWorld = { {tempRight},{tempUp},{forward},{origin} };
+			return cameraToWorld;
 		}
 
 		void Update(Timer* pTimer)

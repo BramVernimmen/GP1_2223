@@ -123,6 +123,7 @@ namespace dae
 
 		void CalculateNormals()
 		{
+			normals.clear();
 			normals.reserve(static_cast<int>(indices.size() / 3));
 
 			for (int i{0}; i < static_cast<int>(indices.size() / 3); ++i) // for each triangle
@@ -134,7 +135,7 @@ namespace dae
 				const Vector3 a{ v1 - v0 };
 				const Vector3 b{ v2 - v0 };
 
-				normals[i] = Vector3::Cross(a, b).Normalized();
+				normals.emplace_back(Vector3::Cross(a, b).Normalized());
 			}
 		}
 
@@ -144,17 +145,19 @@ namespace dae
 			const auto finalTransform = scaleTransform * rotationTransform * translationTransform; // TRS matrix
 
 			// preps the vector 
+			transformedNormals.clear();
+			transformedPositions.clear();
 			transformedPositions.reserve(positions.size());
 			transformedNormals.reserve(normals.size());
 
 			// transform both and store them at the right index
 			for (int i{0}; i < static_cast<int>(positions.size()); ++i)
 			{
-				transformedPositions[i] = finalTransform.TransformPoint(positions[i]);
+				transformedPositions.emplace_back(finalTransform.TransformPoint(positions[i]));
 			}
 			for (int i{0}; i < static_cast<int>(normals.size()); ++i)
 			{
-				transformedNormals[i] = finalTransform.TransformVector(normals[i]).Normalized();
+				transformedNormals.emplace_back(finalTransform.TransformVector(normals[i]).Normalized());
 			}
 
 		}
