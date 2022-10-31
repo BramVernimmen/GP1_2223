@@ -117,10 +117,9 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, f
 	const int px = pixelIndex % m_Width;
 	const int py = pixelIndex / m_Width;
 
-	float cx{ ((2.f * (px + 0.5f)) / m_Width - 1) * aspectRatio * camera.fovScaleFactor };
-	float cy{ (1.f - ((2.f * (py + 0.5f)) / m_Height)) * camera.fovScaleFactor };
+	float cx{ ((2.f * (px + 0.5f)) / m_Width - 1) * aspectRatio * fov };
+	float cy{ (1.f - ((2.f * (py + 0.5f)) / m_Height)) * fov };
 
-	//Vector3 rayDirection{ (cx * camera.right) + (cy * camera.up) + camera.forward };
 	Vector3 rayDirection{ cx, cy , 1 };
 	rayDirection = camera.cameraToWorld.TransformVector(rayDirection);
 	rayDirection.Normalize();
@@ -135,7 +134,6 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, f
 
 	if (closestHit.didHit)
 	{
-		//finalColor = materials[closestHit.materialIndex]->Shade();
 		const Vector3 originOffset{ closestHit.origin + closestHit.normal * 0.0001f }; // Use small offset for the ray origin (self-shadowing)
 		for (size_t i{ 0 }; i < lights.size(); ++i)
 		{
@@ -161,7 +159,6 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, f
 			case dae::Renderer::LightingMode::ObservedArea:
 				if (normalLightAngle < 0)
 					continue;
-				//normalLightAngle *= 0.5f;
 				// only multiply if normalLightAngle is bigger then 0, replacement of if statement
 				finalColor += ColorRGB{ normalLightAngle, normalLightAngle, normalLightAngle };
 				break;

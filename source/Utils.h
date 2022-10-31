@@ -12,62 +12,97 @@ namespace dae
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
+			// ----------- OLD CODE -------------------------------------------------
 			// calculating this prior, reused a lot
-			const Vector3 raySphereOriginVector{ ray.origin - sphere.origin };
+			//const Vector3 raySphereOriginVector{ ray.origin - sphere.origin };
 
-			const float a{ Vector3::Dot(ray.direction, ray.direction) };
-			const float b{ Vector3::Dot((2.f * ray.direction), raySphereOriginVector) };
-			const float c{ Vector3::Dot(raySphereOriginVector, raySphereOriginVector) - (sphere.radius * sphere.radius) };
+			//const float a{ Vector3::Dot(ray.direction, ray.direction) };
+			//const float b{ Vector3::Dot((2.f * ray.direction), raySphereOriginVector) };
+			//const float c{ Vector3::Dot(raySphereOriginVector, raySphereOriginVector) - (sphere.radius * sphere.radius) };
 
-			float discriminant{ (b * b) - 4.f * a * c };
+			//float discriminant{ (b * b) - 4.f * a * c };
 
-			if (discriminant < 0)
-			{
-				return false;
-			}
-
-			// take square root of discriminant
-			discriminant = sqrt(discriminant);
-
-
-			// calculating distance
-			float t{ (- b - discriminant) / (2.f * a)};
-
-			if (t <= ray.min || t > ray.max) // check if distance is outside of range
-			{
-				// first result is out of range if we get here
-				t = ((- b + discriminant) / (2.f * a));
-				if (t <= ray.min || t > ray.max)
-				{
-					return false; // both are out of range; nothing is visible
-				}
-			}
-
-
-			// explanation:
-			// if we take a look at { -b - discriminant / (2.f * a) } and { -b + discriminant / (2.f * a) }
-			// the square root of a value will always be positive
-			// if we subtract this value, the result will always be smaller than the addition
-			// meaning that if we first check the subtraction and it is in range, it will be the smallest possible
-
-
-
-			// code underneath just confuses me, currently keeping it out
-			//// if need to be ignored, just return
-			//if (ignoreHitRecord)
+			//if (discriminant < 0)
 			//{
-			//	return true; // false removes shading
+			//	return false;
+			//}
+
+			//// take square root of discriminant
+			//discriminant = sqrt(discriminant);
+
+
+			//// calculating distance
+			//float t{ (- b - discriminant) / (2.f * a)};
+
+			//if (t <= ray.min || t > ray.max) // check if distance is outside of range
+			//{
+			//	// first result is out of range if we get here
+			//	t = ((- b + discriminant) / (2.f * a));
+			//	if (t <= ray.min || t > ray.max)
+			//	{
+			//		return false; // both are out of range; nothing is visible
+			//	}
 			//}
 
 
-			// calculate the hitRecord info
+			//// explanation:
+			//// if we take a look at { -b - discriminant / (2.f * a) } and { -b + discriminant / (2.f * a) }
+			//// the square root of a value will always be positive
+			//// if we subtract this value, the result will always be smaller than the addition
+			//// meaning that if we first check the subtraction and it is in range, it will be the smallest possible
+
+
+
+			//// code underneath just confuses me, currently keeping it out
+			////// if need to be ignored, just return
+			////if (ignoreHitRecord)
+			////{
+			////	return true; // false removes shading
+			////}
+
+
+			//// calculate the hitRecord info
+			//hitRecord.t = t;
+			//hitRecord.origin = ray.origin + (ray.direction * hitRecord.t);
+			//hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
+			//hitRecord.materialIndex = sphere.materialIndex;
+			//hitRecord.didHit = true;
+
+			//return true;
+
+			//  ----------- NEW CODE -------------------------------------------------
+			// using the info from fxMath - week 01: Ray sphere intersection 2D
+			//const float sphereRadSqr{ sphere.radius * sphere.radius }; // used multiple times, saves a little bit -> apperently doesn't work
+			//
+			const Vector3 tc{ sphere.origin - ray.origin }; // vector from ray origin to center of sphere
+			const float dp{ Vector3::Dot(tc, ray.direction) }; // this will give us the lenght of the TP side of the triangle;
+			// P is the perpendicular projection of point C on the ray
+			const float odSqr{ tc.SqrMagnitude() - (dp * dp) }; // calculate the size of odSquared using pythagorean formula
+			// early exit; if odSqr if outside of the sphere radius squared, the point is not in the sphere and we don't hit
+			if (odSqr > (sphere.radius * sphere.radius))
+				return false;
+
+			// we now want to calculate intersecting point
+			// first we need to calculate the distance between the point and P (in triangle of: intersecting point, P, C)
+			const float tca{ sqrtf((sphere.radius * sphere.radius) - odSqr) };
+
+			// now we can calculate t
+			const float t{ dp - tca };
+
+			// now we can calculate the intersecting point, but first check if t is withing range
+			if (t <= ray.min || t > ray.max)
+				return false;
+
+			if (ignoreHitRecord) return true;
+
+			const Vector3 intersectPoint{ ray.origin + t * ray.direction };
 			hitRecord.t = t;
-			hitRecord.origin = ray.origin + (ray.direction * hitRecord.t);
-			hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
+			hitRecord.origin = intersectPoint;
+			hitRecord.normal = (intersectPoint - sphere.origin).Normalized();
 			hitRecord.materialIndex = sphere.materialIndex;
 			hitRecord.didHit = true;
-
 			return true;
+
 		}
 
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray)
@@ -254,7 +289,7 @@ namespace dae
 		
 		inline bool IntersectAABB(const Ray& ray, const Vector3& minAABB, const Vector3& maxAABB)
 		{
-			//Vector3 inversedDirection{ 1.0f / ray.direction.x, 1.0f / ray.direction.y, 1.0f / ray.direction.z }; -> more fps
+			// const Vector3 inversedDirection{ 1.0f / ray.direction.x, 1.0f / ray.direction.y, 1.0f / ray.direction.z }; -> more fps?
 
 			const float tx1 = (minAABB.x - ray.origin.x) / ray.direction.x;
 			const float tx2 = (maxAABB.x - ray.origin.x) / ray.direction.x;
@@ -292,7 +327,7 @@ namespace dae
 				triangle.materialIndex = mesh.materialIndex;
 
 				// For each triangle
-				for (int i{}; i < node.triCount / 3; ++i)
+				for (int i{}; i < static_cast<int>(node.triCount) / 3; ++i)
 				{
 					// Set the position and normal of the current triangle to the triangle object
 					triangle.v0 = mesh.transformedPositions[mesh.indices[node.firstTriIdx + i * 3]];

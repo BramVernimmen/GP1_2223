@@ -112,7 +112,7 @@ namespace dae
 
 
 
-		BVHNode* pBvhNodes;
+		BVHNode* pBvhNodes{};
 		unsigned int rootNodeIdx{};
 		unsigned int nodesUsed{};
 
@@ -191,7 +191,7 @@ namespace dae
 				transformedNormals.emplace_back(finalTransform.TransformVector(normals[i]).Normalized());
 			}
 
-			UpdateTransformedAABB(finalTransform);
+			//UpdateTransformedAABB(finalTransform);
 
 			nodesUsed = 0;
 			BuildBVH();

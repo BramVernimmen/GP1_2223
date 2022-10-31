@@ -116,17 +116,32 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationX(float pitch)
 	{
-		return { {1,0,0},{0,cosf(pitch),-sinf(pitch)},{0,sinf(pitch),cosf(pitch)},{0,0,0} };
+		const float sinef{ sinf(pitch) };
+		const float cosinef{ cosf(pitch) };
+		return {	{1, 0, 0},
+					{0, cosinef, -sinef},
+					{0, sinef, cosinef},
+					{0, 0, 0} };
 	}
 
 	Matrix Matrix::CreateRotationY(float yaw)
 	{
-		return { {cosf(yaw),0,-sinf(yaw)},{0,1,0},{sinf(yaw),0,cosf(yaw)},{0,0,0}};
+		const float sinef{ sinf(yaw) };
+		const float cosinef{ cosf(yaw) };
+		return {	{cosinef, 0, -sinef},
+					{0, 1, 0},
+					{sinef, 0, cosinef},
+					{0, 0, 0}};
 	}
 
 	Matrix Matrix::CreateRotationZ(float roll)
 	{
-		return { {cosf(roll), sinf(roll),0},{-sinf(roll),cosf(roll),0},{0,0,1},{0,0,0}};
+		const float sinef{ sinf(roll) };
+		const float cosinef{ cosf(roll) };
+		return {	{cosinef, sinef, 0},
+					{-sinef, cosinef, 0},
+					{0, 0, 1},
+					{0, 0, 0}};
 	}
 
 	Matrix Matrix::CreateRotation(const Vector3& r)
@@ -142,7 +157,10 @@ namespace dae {
 
 	Matrix Matrix::CreateScale(float sx, float sy, float sz)
 	{
-		return { {sx,0,0}, {0,sy,0}, {0,0,sz},{0,0,0} };
+		return {	{sx, 0, 0}, 
+					{0, sy, 0}, 
+					{0, 0, sz},
+					{0, 0, 0} };
 	}
 
 	Matrix Matrix::CreateScale(const Vector3& s)
