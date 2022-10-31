@@ -145,36 +145,75 @@ namespace dae
 				break;
 			}
 
+			//--------------OLD CODE------------------------------------------------------------------
 
-			const Vector3 length = ((triangle.v0 + triangle.v1 + triangle.v2) / 3) - ray.origin; // length between triangle center and viewray
-			const float t = Vector3::Dot(length, triangle.normal) / Vector3::Dot(ray.direction, triangle.normal);
+			//const Vector3 length = ((triangle.v0 + triangle.v1 + triangle.v2) / 3) - ray.origin; // length between triangle center and viewray
+			//const float t = Vector3::Dot(length, triangle.normal) / Vector3::Dot(ray.direction, triangle.normal);
 
 
 			// check if t is in range
-			if (t < ray.min || t >= ray.max)
+			//if (t < ray.min || t >= ray.max)
+			//	return false;
+
+			//const Vector3 p = ray.origin + t * ray.direction;
+			//
+			//const Vector3 edgeA = triangle.v1 - triangle.v0;
+			//const Vector3 edgeB = triangle.v2 - triangle.v1;
+			//const Vector3 edgeC = triangle.v0 - triangle.v2;
+			//const Vector3 pointToSideA = p - triangle.v0;
+			//const Vector3 pointToSideB = p - triangle.v1;
+			//const Vector3 pointToSideC = p - triangle.v2;
+			//if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeA, pointToSideA)) < 0)
+			//	return false;
+			//if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeB, pointToSideB)) < 0)
+			//	return false;
+			//if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeC, pointToSideC)) < 0)
+			//	return false;
+
+
+
+
+			//--------------NEW CODE------------------------------------------------------------------
+
+			// Code was made possible thanks to: https://www.youtube.com/watch?v=fK1RPmF_zjQ - watch part from 6.30 min - 13.00 min
+
+			const Vector3 edge1{ triangle.v1 - triangle.v0};
+			const Vector3 edge2{ triangle.v2 - triangle.v0};
+			const Vector3 cross_rayDir_edge2{Vector3::Cross(ray.direction, edge2)};
+			
+			
+			const float det{Vector3::Dot(edge1, cross_rayDir_edge2)}; // scalar triple product
+
+			if (det > -FLT_EPSILON && det < FLT_EPSILON)
 				return false;
 
-			const Vector3 p = ray.origin + t * ray.direction;
+			const float inv_det{ 1.0f / det}; // calculate after the det, might return false so no need to waste time to calculate before
 
-			const Vector3 edgeA = triangle.v1 - triangle.v0;
-			const Vector3 edgeB = triangle.v2 - triangle.v1;
-			const Vector3 edgeC = triangle.v0 - triangle.v2;
-			const Vector3 pointToSideA = p - triangle.v0;
-			const Vector3 pointToSideB = p - triangle.v1;
-			const Vector3 pointToSideC = p - triangle.v2;
-			if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeA, pointToSideA)) < 0)
+			const Vector3 orig_minus_vert0{ray.origin - triangle.v0};
+			const float baryU{ Vector3::Dot(orig_minus_vert0, cross_rayDir_edge2) * inv_det};
+			if (baryU < 0.0f || baryU > 1.0f)
 				return false;
-			if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeB, pointToSideB)) < 0)
+
+			const Vector3 cross_oriMinusVert0_edge1{Vector3::Cross(orig_minus_vert0, edge1)};
+			const float baryV{ Vector3::Dot(ray.direction, cross_oriMinusVert0_edge1) * inv_det};
+			if (baryV < 0.0f || baryU + baryV > 1.0f)
 				return false;
-			if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeC, pointToSideC)) < 0)
+
+			
+			const float rayT{Vector3::Dot(edge2, cross_oriMinusVert0_edge1) * inv_det};
+
+			if (rayT < ray.min || rayT >= ray.max)
 				return false;
+
 
 			// if we get here, time to fill in the hitrecord and return true
 			hitRecord.normal = triangle.normal;
 			hitRecord.didHit = true;
 			hitRecord.materialIndex = triangle.materialIndex;
-			hitRecord.origin = ray.origin + (ray.direction * t);
-			hitRecord.t = t;
+			hitRecord.origin = ray.origin + (ray.direction * rayT);
+			hitRecord.t = rayT;
+			//hitRecord.origin = ray.origin + (ray.direction * t);
+			//hitRecord.t = t;
 
 
 			return true;
@@ -188,39 +227,142 @@ namespace dae
 		}
 #pragma endregion
 #pragma region TriangeMesh HitTest
+		// OLD SLABTEST  --> basically the same as IntersectAABB, but this one uses mesh, the other will get the min and max as parameters
+		//inline bool SlabTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)
+		//{
+		//	float tx1 = (mesh.transformedMinAABB.x - ray.origin.x) / ray.direction.x;
+		//	float tx2 = (mesh.transformedMaxAABB.x - ray.origin.x) / ray.direction.x;
+		//
+		//	float tmin = std::min(tx1, tx2);
+		//	float tmax = std::max(tx1, tx2);
+		//
+		//	float ty1 = (mesh.transformedMinAABB.y - ray.origin.y) / ray.direction.y;
+		//	float ty2 = (mesh.transformedMaxAABB.y - ray.origin.y) / ray.direction.y;
+		//
+		//	tmin = std::max(tmin, std::min(ty1, ty2));
+		//	tmax = std::min(tmin, std::max(ty1, ty2));
+		//
+		//	float tz1 = (mesh.transformedMinAABB.z - ray.origin.z) / ray.direction.z;
+		//	float tz2 = (mesh.transformedMaxAABB.z - ray.origin.z) / ray.direction.z;
+		//
+		//	tmin = std::max(tmin, std::min(tz1, tz2));
+		//	tmax = std::min(tmin, std::max(tz1, tz2));
+		//
+		//	return tmax > 0 && tmax >= tmin;
+		//}
+		// 
+		
+		inline bool IntersectAABB(const Ray& ray, const Vector3& minAABB, const Vector3& maxAABB)
+		{
+			//Vector3 inversedDirection{ 1.0f / ray.direction.x, 1.0f / ray.direction.y, 1.0f / ray.direction.z }; -> more fps
+
+			const float tx1 = (minAABB.x - ray.origin.x) / ray.direction.x;
+			const float tx2 = (maxAABB.x - ray.origin.x) / ray.direction.x;
+
+			float tmin = std::min(tx1, tx2);
+			float tmax = std::max(tx1, tx2);
+
+			const float ty1 = (minAABB.y - ray.origin.y) / ray.direction.y;
+			const float ty2 = (maxAABB.y - ray.origin.y) / ray.direction.y;
+
+			tmin = std::max(tmin, std::min(ty1, ty2));
+			tmax = std::min(tmax, std::max(ty1, ty2));
+
+			const float tz1 = (minAABB.z - ray.origin.z) / ray.direction.z;
+			const float tz2 = (maxAABB.z - ray.origin.z) / ray.direction.z;
+
+			tmin = std::max(tmin, std::min(tz1, tz2));
+			tmax = std::min(tmax, std::max(tz1, tz2));
+
+			return tmax > 0 && tmax >= tmin;
+		}
+
+		inline void IntersectBVH(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool& hasHit, HitRecord& curClosestHit, unsigned int bvhNodeIdx, bool ignoreHitRecord)
+		{
+			BVHNode& node = mesh.pBvhNodes[bvhNodeIdx];
+
+			// Slabtest
+			if (!IntersectAABB(ray, node.minAABB, node.maxAABB)) return;
+
+			if (node.IsLeaf())
+			{
+				// Create temp triangle
+				Triangle triangle{};
+				triangle.cullMode = mesh.cullMode;
+				triangle.materialIndex = mesh.materialIndex;
+
+				// For each triangle
+				for (int i{}; i < node.triCount / 3; ++i)
+				{
+					// Set the position and normal of the current triangle to the triangle object
+					triangle.v0 = mesh.transformedPositions[mesh.indices[node.firstTriIdx + i * 3]];
+					triangle.v1 = mesh.transformedPositions[mesh.indices[node.firstTriIdx + i * 3 + 1]];
+					triangle.v2 = mesh.transformedPositions[mesh.indices[node.firstTriIdx + i * 3 + 2]];
+					triangle.normal = mesh.transformedNormals[(node.firstTriIdx + i * 3) / 3];
+
+					// If the ray hits a triangle in the mesh, check if it is closer then the previous hit triangle
+					if (HitTest_Triangle(triangle, ray, curClosestHit, ignoreHitRecord))
+					{
+						hasHit = true;
+
+						// Check if the current hit is closer then the previous hit
+						if (hitRecord.t > curClosestHit.t)
+						{
+							hitRecord = curClosestHit;
+						}
+					}
+				}
+			}
+			else
+			{
+				IntersectBVH(mesh, ray, hitRecord, hasHit, curClosestHit, node.leftNode, ignoreHitRecord);
+				IntersectBVH(mesh, ray, hitRecord, hasHit, curClosestHit, node.leftNode + 1, ignoreHitRecord);
+			}
+		}
+
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			
-			// Create a triangle to test on
-			Triangle triangle{};
+			// slabtest
+			//if (!SlabTest_TriangleMesh(mesh, ray))
+			//{
+			//	return false;
+			//}
 
-			// Give triangle the same cullMode and material
-			triangle.cullMode = mesh.cullMode;
-			triangle.materialIndex = mesh.materialIndex;
+			 
+			// Create a triangle to test on
+			//Triangle triangle{};
+			//
+			//// Give triangle the same cullMode and material
+			//triangle.cullMode = mesh.cullMode;
+			//triangle.materialIndex = mesh.materialIndex;
 
 			HitRecord tempHit{};
+			bool hasHit{};
 
-			// loop each triangle
-			for (int i{ 0 }; i < static_cast<int>(mesh.indices.size() / 3); ++i) // for each triangle
-			{
-				// give the correct position and normal to triangle
-				triangle.v0 = mesh.transformedPositions[mesh.indices[i * 3]] ; // vertex 1
-				triangle.v1 = mesh.transformedPositions[mesh.indices[i * 3 + 1]] ; // vertex 2
-				triangle.v2 = mesh.transformedPositions[mesh.indices[i * 3 + 2]] ; // vertex 3
-				triangle.normal = mesh.transformedNormals[i];
-				if (GeometryUtils::HitTest_Triangle(triangle, ray, tempHit, ignoreHitRecord)) // same as in Scene.cpp -> GetClosestHit
-				{
-					if (tempHit.t < hitRecord.t)
-					{
-						hitRecord = tempHit;
-					}
+			// BVH intersect
+			IntersectBVH(mesh, ray, hitRecord, hasHit, tempHit, mesh.rootNodeIdx, ignoreHitRecord);
 
-				}
+			//// loop each triangle
+			//for (int i{ 0 }; i < static_cast<int>(mesh.indices.size() / 3); ++i) // for each triangle
+			//{
+			//	// give the correct position and normal to triangle
+			//	triangle.v0 = mesh.transformedPositions[mesh.indices[i * 3]] ; // vertex 1
+			//	triangle.v1 = mesh.transformedPositions[mesh.indices[i * 3 + 1]] ; // vertex 2
+			//	triangle.v2 = mesh.transformedPositions[mesh.indices[i * 3 + 2]] ; // vertex 3
+			//	triangle.normal = mesh.transformedNormals[i];
+			//	if (GeometryUtils::HitTest_Triangle(triangle, ray, tempHit, ignoreHitRecord)) // same as in Scene.cpp -> GetClosestHit
+			//	{
+			//		if (tempHit.t < hitRecord.t)
+			//		{
+			//			hitRecord = tempHit;
+			//		}
+			//
+			//	}
+			//
+			//}
 
-			}
 
-
-			return hitRecord.didHit;
+			return hasHit;
 		}
 
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)
@@ -228,6 +370,8 @@ namespace dae
 			HitRecord temp{};
 			return HitTest_TriangleMesh(mesh, ray, temp, true);
 		}
+
+		
 #pragma endregion
 	}
 
