@@ -258,8 +258,10 @@ namespace dae
 		{
 			BVHNode& node = pBvhNodes[nodeIdx];
 
-			node.minAABB = Vector3(FLT_MAX, FLT_MAX, FLT_MAX);
-			node.maxAABB = Vector3(FLT_MIN, FLT_MIN, FLT_MIN);
+			//node.minAABB = Vector3(FLT_MAX, FLT_MAX, FLT_MAX);
+			node.minAABB = Vector3::MaxFloat;
+			//node.maxAABB = Vector3(FLT_MIN, FLT_MIN, FLT_MIN);
+			node.maxAABB = Vector3::MinFloat;
 
 			// for each vertex, take min/max
 			for (unsigned int i{ 0 }; i < node.triCount; ++i) 

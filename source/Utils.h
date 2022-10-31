@@ -115,18 +115,15 @@ namespace dae
 		//PLANE HIT-TESTS
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			// code underneath just confuses me, currently keeping it out
-			//// if need to be ignored, just return
-			//if (ignoreHitRecord)
-			//{
-			//	return false; // using true makes whole screen shaded
-			//}
 			float t{ Vector3::Dot((plane.origin - ray.origin), plane.normal) / Vector3::Dot(ray.direction, plane.normal) };
 			if (t > ray.min && t <= ray.max)
 			{
-				hitRecord.normal = plane.normal;
-				hitRecord.origin = ray.origin + (ray.direction * t);
+				if (ignoreHitRecord)
+					return true;
+
 				hitRecord.t = t;
+				hitRecord.origin = ray.origin + (ray.direction * t);
+				hitRecord.normal = plane.normal;
 				hitRecord.materialIndex = plane.materialIndex;
 				hitRecord.didHit = true;
 			}
@@ -240,13 +237,17 @@ namespace dae
 			if (rayT < ray.min || rayT >= ray.max)
 				return false;
 
+			if (ignoreHitRecord)
+				return true;
 
 			// if we get here, time to fill in the hitrecord and return true
-			hitRecord.normal = triangle.normal;
-			hitRecord.didHit = true;
-			hitRecord.materialIndex = triangle.materialIndex;
-			hitRecord.origin = ray.origin + (ray.direction * rayT);
 			hitRecord.t = rayT;
+			hitRecord.origin = ray.origin + (ray.direction * rayT);
+			hitRecord.normal = triangle.normal;
+			hitRecord.materialIndex = triangle.materialIndex;
+			hitRecord.didHit = true;
+			
+
 			//hitRecord.origin = ray.origin + (ray.direction * t);
 			//hitRecord.t = t;
 
@@ -339,6 +340,9 @@ namespace dae
 					if (HitTest_Triangle(triangle, ray, curClosestHit, ignoreHitRecord))
 					{
 						hasHit = true;
+
+						if (ignoreHitRecord)
+							return;
 
 						// Check if the current hit is closer then the previous hit
 						if (hitRecord.t > curClosestHit.t)
