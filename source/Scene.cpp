@@ -35,6 +35,7 @@ namespace dae {
 			if (tempHit.t < closestHit.t)
 			{
 				closestHit = tempHit;
+				closestHit.normal.Normalize();
 			}
 		}
 

@@ -98,7 +98,7 @@ namespace dae
 			const Vector3 intersectPoint{ ray.origin + t * ray.direction };
 			hitRecord.t = t;
 			hitRecord.origin = intersectPoint;
-			hitRecord.normal = (intersectPoint - sphere.origin).Normalized();
+			hitRecord.normal = (intersectPoint - sphere.origin);
 			hitRecord.materialIndex = sphere.materialIndex;
 			hitRecord.didHit = true;
 			return true;

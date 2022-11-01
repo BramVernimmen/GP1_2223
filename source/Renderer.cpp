@@ -29,6 +29,7 @@ Renderer::Renderer(SDL_Window * pWindow) :
 	//Initialize
 	SDL_GetWindowSize(pWindow, &m_Width, &m_Height);
 	m_pBufferPixels = static_cast<uint32_t*>(m_pBuffer->pixels);
+	m_AspectRatio = m_Width / static_cast<float>(m_Height);
 }
 
 void Renderer::Render(Scene* pScene) const
@@ -41,7 +42,6 @@ void Renderer::Render(Scene* pScene) const
 	auto& materials = pScene->GetMaterials();
 	auto& lights = pScene->GetLights();
 
-	const float aspectRatio{ m_Width / static_cast<float>(m_Height) };
 
 	const uint32_t numPixels = m_Width * m_Height;
 
@@ -71,7 +71,7 @@ void Renderer::Render(Scene* pScene) const
 					const uint32_t pixelIndexEnd = currPixelIndex + taskSize;
 					for (uint32_t pixelIndex{ currPixelIndex }; pixelIndex < pixelIndexEnd; ++pixelIndex)
 					{
-						RenderPixel(pScene, pixelIndex, fov, aspectRatio, camera, lights, materials);
+						RenderPixel(pScene, pixelIndex, fov, m_AspectRatio, camera, lights, materials);
 					}
 				})
 		);
@@ -91,7 +91,7 @@ void Renderer::Render(Scene* pScene) const
 	concurrency::parallel_for(0u, numPixels,
 		[=, this](int i)
 		{
-			RenderPixel(pScene, i, fov, aspectRatio, camera, lights, materials);
+			RenderPixel(pScene, i, fov, m_AspectRatio, camera, lights, materials);
 		});
 
 #else 
@@ -99,7 +99,7 @@ void Renderer::Render(Scene* pScene) const
 	//Synchronous Logic
 	for (uint32_t i{0}; i < numPixels; ++i)
 	{
-		RenderPixel(pScene, i, fov, aspectRatio, camera, lights, materials);
+		RenderPixel(pScene, i, fov, m_AspectRatio, camera, lights, materials);
 	}
 
 #endif
@@ -121,8 +121,7 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, f
 	float cy{ (1.f - ((2.f * (py + 0.5f)) / m_Height)) * fov };
 
 	Vector3 rayDirection{ cx, cy , 1 };
-	rayDirection = camera.cameraToWorld.TransformVector(rayDirection);
-	rayDirection.Normalize();
+	rayDirection = camera.cameraToWorld.TransformVector(rayDirection).Normalized();
 
 	Ray viewRay{ camera.origin, rayDirection };
 
@@ -144,10 +143,10 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, f
 
 			if (m_ShadowsEnabled)
 			{
-				Ray invLightRay{}; // W2 slide 25
-				invLightRay.max = lightDistance;
-				invLightRay.origin = originOffset;
-				invLightRay.direction = lightDirection;
+				Ray invLightRay{originOffset, lightDirection, 0.0f, lightDistance}; // W2 slide 25
+				//invLightRay.max = lightDistance;
+				//invLightRay.origin = originOffset;
+				//invLightRay.direction = lightDirection;
 
 				if (pScene->DoesHit(invLightRay))
 					continue;
