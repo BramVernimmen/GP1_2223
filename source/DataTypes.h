@@ -66,6 +66,36 @@ namespace dae
 	};
 	
 
+	struct aabb
+	{
+		Vector3 bMin{ Vector3::MaxFloat };
+		Vector3 bMax{ Vector3::MinFloat };
+		void Grow(const Vector3& p)
+		{
+			bMin = Vector3::Min(bMin, p);
+			bMax = Vector3::Max(bMax, p);
+		}
+		void Grow(const aabb& bounds)
+		{
+			bMin = Vector3::Min(bMin, bounds.bMin);
+			bMax = Vector3::Max(bMax, bounds.bMax);
+		}
+		float Area()
+		{
+			Vector3 extent{ bMax - bMin }; // box extent
+			return extent.x * extent.y + extent.y * extent.z + extent.z * extent.x;
+		}
+
+	};
+
+	struct Bin
+	{
+
+		aabb bounds;
+		int triCount{ 0 };
+
+	};
+
 	struct TriangleMesh
 	{
 		TriangleMesh() = default;
@@ -156,11 +186,15 @@ namespace dae
 			normals.clear();
 			normals.reserve(static_cast<int>(indices.size() / 3));
 
-			for (int i{0}; i < static_cast<int>(indices.size() / 3); ++i) // for each triangle
+			// used to do i < indices.size() / 3
+			// and v0{positions[indiced[i*3]]}, v1.....
+			// noticed that this is a bit slower than doing it like now
+			// changed this everywhere to keep consistent
+			for (int i{0}; i < static_cast<int>(indices.size() ); i += 3) // for each triangle
 			{
-				const Vector3 v0{ positions[indices[i * 3]] }; // vertex 1
-				const Vector3 v1{ positions[indices[i * 3 + 1]] }; // vertex 2
-				const Vector3 v2{ positions[indices[i * 3 + 2]] }; // vertex 3
+				const Vector3 v0{ positions[indices[i]] }; // vertex 1
+				const Vector3 v1{ positions[indices[i + 1]] }; // vertex 2
+				const Vector3 v2{ positions[indices[i + 2]] }; // vertex 3
 
 				const Vector3 a{ v1 - v0 };
 				const Vector3 b{ v2 - v0 };
@@ -271,25 +305,81 @@ namespace dae
 			}
 		}
 
+		void BuildBVH()
+		{
+			BVHNode& root = pBvhNodes[rootNodeIdx];
+			root.leftNode = 0;
+			root.firstTriIdx = 0;
+			root.triCount = static_cast<unsigned int>(indices.size());
+
+			UpdateNodeBounds(rootNodeIdx);
+
+			Subdivide(rootNodeIdx);
+
+		}
+
 
 		void Subdivide(unsigned int nodeIdx)
 		{
 			// terminate recursion
 			BVHNode& node = pBvhNodes[nodeIdx];
-			if (node.triCount <= 10) return; // test number
-			// determine split axis and position
-			const Vector3 extent{ node.maxAABB - node.minAABB };
+			if (node.triCount <= 8) return; // test number
+			
+			// the tutorial I followed had 3 different parts to this solution, with each part giving more performance
+			// uncomment 1 part while keeping the rest commented should let you work with the old stuff
+
+			//// determine split axis and position -> part 1
+			/*const Vector3 extent{ node.maxAABB - node.minAABB };
 			int axis{ 0 };
 			if (extent.y > extent.x) axis = 1;
 			if (extent.z > extent[axis]) axis = 2;
-			float splitPos = node.minAABB[axis] + extent[axis] * 0.5f;
+			float splitPos = node.minAABB[axis] + extent[axis] * 0.5f;*/
+
+
+
+			//// determine split axis using SAH -> part 2 (part 2 has lower performance than part 1)
+			//int bestAxis{ -1 };
+			//float bestPos{ 0 };
+			/*float bestCost{ FLT_MAX };
+			for (int axis{0}; axis < 3; ++axis)
+			{
+				for (unsigned int i{0}; i < node.triCount / 3; ++i)
+				{
+					const Vector3 centroid{ (transformedPositions[indices[i * 3]] + transformedPositions[indices[i * 3 + 1]] + transformedPositions[indices[i * 3 + 2]]) * 0.3333f };
+
+					const float candidatePos{ centroid[axis] };
+					const float cost{ EvaluateSAH(node, axis, candidatePos) };
+					if (cost < bestCost)
+					{
+						bestPos = candidatePos;
+						bestAxis = axis;
+						bestCost = cost;
+					}
+				}
+			}*/
+			//const int axis{ bestAxis };
+			//const float splitPos{ bestPos };
+			
+			// part 3
+			int axis{ };
+			float splitPos{ };
+			float splitCost{ FindBestSplitPlane(node, axis, splitPos) };
+			const float noSplitCost{ CalculateNodeCost(node) };
+			if (splitCost >= noSplitCost) return;
+
+
+
+			// end parts
+
+
+
 			// in-place partition
 			int i{ static_cast<int>(node.firstTriIdx)};
 			int j{ i + static_cast<int>(node.triCount) - 1 };
 			while (i <= j)
 			{
 				//calculate centroid of current triangle
-				const Vector3 centroid{ (transformedPositions[indices[i]] + transformedPositions[indices[i + 1]] + transformedPositions[indices[i + 2]]) / 3.0f };
+				const Vector3 centroid{ (transformedPositions[indices[i]] + transformedPositions[indices[i + 1]] + transformedPositions[indices[i + 2]]) * 0.3333f };
 				if (centroid[axis] < splitPos)
 				{
 					i += 3;
@@ -326,20 +416,130 @@ namespace dae
 
 		}
 
-		void BuildBVH()
+
+		float EvaluateSAH(const BVHNode& node, int axis, float pos)
 		{
-			BVHNode& root = pBvhNodes[rootNodeIdx];
-			root.leftNode = 0;
-			root.firstTriIdx = 0;
-			root.triCount = static_cast<unsigned int>(indices.size());
+			// determine triangle counts and bounds for this split candidate
+			aabb leftBox{};
+			aabb rightBox{};
+			int leftCount{ 0 };
+			int rightCount{ 0 };
 
-			UpdateNodeBounds(rootNodeIdx);
+			for (unsigned int i{ 0 }; i < node.triCount / 3; ++i)
+			{
+				const Vector3 v0{ transformedPositions[indices[i * 3]] };
+				const Vector3 v1{ transformedPositions[indices[i * 3 + 1]] };
+				const Vector3 v2{ transformedPositions[indices[i * 3 + 2]] };
+				const Vector3 centroid{ (v0 + v1 + v2) * 0.3333f };
 
-			Subdivide(rootNodeIdx);
+				if (centroid[axis] < pos)
+				{
+					leftCount++;
+					leftBox.Grow(v0);
+					leftBox.Grow(v1);
+					leftBox.Grow(v2);
+				}
+				else
+				{
+					rightCount++;
+					rightBox.Grow(v0);
+					rightBox.Grow(v1);
+					rightBox.Grow(v2);
+				}
+			}
 
+			const float cost{ leftCount * leftBox.Area() + rightCount * rightBox.Area() };
+			return cost > 0 ? cost : FLT_MAX;
 		}
 
-		
+
+
+		float FindBestSplitPlane(const BVHNode& node, int& axis, float& splitPos)
+		{
+			float bestCost{ FLT_MAX };
+			for (int currAxis{ 0 }; currAxis < 3; ++currAxis)
+			{
+				float boundsMin{FLT_MAX};
+				float boundsMax{FLT_MIN};
+				for (unsigned int i{0}; i < node.triCount; i += 3)
+				{
+					const Vector3 centroid{ (transformedPositions[indices[node.firstTriIdx + i]] + transformedPositions[indices[node.firstTriIdx + i + 1]] + transformedPositions[indices[node.firstTriIdx + i + 2]]) / 3.0f };
+					boundsMin = std::min(boundsMin, centroid[currAxis]);
+					boundsMax = std::max(boundsMax, centroid[currAxis]);
+				}
+				
+
+				if (boundsMin == boundsMax) continue;
+				// populate the bins
+				const int nrOfBins{ 8 };
+				Bin bin[nrOfBins];
+				float scale{ nrOfBins / (boundsMax - boundsMin)  };
+
+
+
+				for (unsigned int i{0}; i < node.triCount; i += 3)
+				{
+					const Vector3& v0{ transformedPositions[indices[node.firstTriIdx + i]] };
+					const Vector3& v1{ transformedPositions[indices[node.firstTriIdx + i + 1]] };
+					const Vector3& v2{ transformedPositions[indices[node.firstTriIdx + i + 2]] };
+					const Vector3 centroid{ (v0 + v1 + v2) / 3.0f };
+
+					const int binIdx{ std::min(nrOfBins - 1, static_cast<int>((centroid[currAxis] - boundsMin) * scale)) };
+
+					bin[binIdx].triCount += 3;
+					bin[binIdx].bounds.Grow(v0);
+					bin[binIdx].bounds.Grow(v1);
+					bin[binIdx].bounds.Grow(v2);
+				}
+
+				// gather data for the 7 planes between the 8 bins
+				float leftArea[nrOfBins - 1]{};
+				float rightArea[nrOfBins - 1]{};
+				int leftCount[nrOfBins - 1]{};
+				int rightCount[nrOfBins - 1]{};
+
+
+				aabb leftBox;
+				aabb rightBox;
+				int leftSum{ 0 };
+				int rightSum{ 0 };
+				for (int i{0}; i < nrOfBins - 1; ++i)
+				{
+					leftSum += bin[i].triCount;
+					leftCount[i] = leftSum;
+					leftBox.Grow(bin[i].bounds);
+					leftArea[i] = leftBox.Area();
+
+
+					rightSum += bin[nrOfBins - 1 - i].triCount;
+					rightCount[nrOfBins - 2 - i] = rightSum;
+					rightBox.Grow(bin[nrOfBins - 1 - i].bounds);
+					rightArea[nrOfBins - 2 - i] = rightBox.Area();
+				}
+
+				scale = (boundsMax - boundsMin) / nrOfBins;
+				for (int i{0}; i < nrOfBins - 1; ++i)
+				{
+					const float planeCost{ leftCount[i] * leftArea[i] + rightCount[i] * rightArea[i] };
+					if (planeCost < bestCost)
+					{
+						axis = currAxis;
+						splitPos = boundsMin + scale * (i + 1);
+						bestCost = planeCost;
+					}
+				}
+			}
+
+			return bestCost;
+		}
+
+
+		float CalculateNodeCost(const BVHNode& node)
+		{
+			const Vector3 extent{ node.maxAABB - node.minAABB };
+			const float surfaceArea{ extent.x * extent.y + extent.y * extent.z + extent.z * extent.x };
+			return static_cast<float>(node.triCount) * surfaceArea;
+		}
 
 	};
 #pragma endregion

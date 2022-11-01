@@ -145,9 +145,9 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, f
 			if (m_ShadowsEnabled)
 			{
 				Ray invLightRay{}; // W2 slide 25
+				invLightRay.max = lightDistance;
 				invLightRay.origin = originOffset;
 				invLightRay.direction = lightDirection;
-				invLightRay.max = lightDistance;
 
 				if (pScene->DoesHit(invLightRay))
 					continue;
