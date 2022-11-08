@@ -130,9 +130,10 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, const Camera
 	if (closestHit.didHit)
 	{
 		const Vector3 originOffset{ closestHit.origin + closestHit.normal * 0.0001f }; // Use small offset for the ray origin (self-shadowing)
-		for (size_t i{ 0 }; i < lights.size(); ++i)
+		//for (size_t i{ 0 }; i < lights.size(); ++i)
+		for (const Light& currLight: lights)
 		{
-			Vector3 lightDirection{ LightUtils::GetDirectionToLight(lights[i], originOffset) };
+			Vector3 lightDirection{ LightUtils::GetDirectionToLight(currLight, originOffset) };
 			const float lightDistance{ lightDirection.Normalize() }; // normalizing the vector returns the distance
 			//const float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection) }; // angle between normal and light direction (cosine theta)
 			// --> moved the normalLightAngle into the switch so it isn't calculated when not needed
@@ -151,29 +152,31 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, const Camera
 			case dae::Renderer::LightingMode::ObservedArea:
 			{
 
-				const float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection) }; // angle between normal and light direction (cosine theta)
+				//const float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection) }; // angle between normal and light direction (cosine theta)
+				const float normalLightAngle{ std::max(Vector3::Dot(closestHit.normal, lightDirection), 0.0f )}; // angle between normal and light direction (cosine theta)
 
-				if (normalLightAngle < 0)
-					continue;
+				//if (normalLightAngle < 0)
+				//	continue;
 				// only multiply if normalLightAngle is bigger then 0, replacement of if statement
 				finalColor += ColorRGB{ normalLightAngle, normalLightAngle, normalLightAngle };
 			}
 				break;
 			case dae::Renderer::LightingMode::Radiance:
-				finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin);
+				finalColor += LightUtils::GetRadiance(currLight, closestHit.origin);
 				break;
 			case dae::Renderer::LightingMode::BRDF:
 				finalColor += materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, rayDirection);
 				break;
 			case dae::Renderer::LightingMode::Combined:
 			{
-				const float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection) }; // angle between normal and light direction (cosine theta)
+				//const float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection)}; // angle between normal and light direction (cosine theta)
+				const float normalLightAngle{ std::max(Vector3::Dot(closestHit.normal, lightDirection), 0.0f )}; // angle between normal and light direction (cosine theta)
 
 				// formula getting too long, making variables...
-				if (normalLightAngle < 0)
-					continue;
+				//if (normalLightAngle < 0)
+				//	continue;
 
-				const ColorRGB radiance{ LightUtils::GetRadiance(lights[i], closestHit.origin) };
+				const ColorRGB radiance{ LightUtils::GetRadiance(currLight, closestHit.origin) };
 				const ColorRGB brdf{ materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, rayDirection) };
 
 				finalColor += radiance * brdf * normalLightAngle;

@@ -33,9 +33,13 @@ namespace dae {
 	float Vector3::Normalize()
 	{
 		const float m = Magnitude();
-		x /= m;
-		y /= m;
-		z /= m;
+		const float invM = 1.0f / m;
+		//x /= m;
+		//y /= m;
+		//z /= m;
+		x *= invM;
+		y *= invM;
+		z *= invM;
 
 		return m;
 	}
@@ -43,7 +47,10 @@ namespace dae {
 	Vector3 Vector3::Normalized() const
 	{
 		const float m = Magnitude();
-		return { x / m, y / m, z / m };
+		const float invM = 1.0f / m;
+
+		//return { x / m, y / m, z / m };
+		return { x * invM, y * invM, z * invM };
 	}
 
 	float Vector3::Dot(const Vector3& v1, const Vector3& v2)

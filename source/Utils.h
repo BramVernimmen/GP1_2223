@@ -321,21 +321,66 @@ namespace dae
 			// Slabtest
 			if (!IntersectAABB(ray, node.minAABB, node.maxAABB)) return;
 
-			if (node.IsLeaf())
+			//if (node.IsLeaf())
+			//{
+			//	// Create temp triangle
+			//	Triangle triangle{};
+			//	triangle.cullMode = mesh.cullMode;
+			//	triangle.materialIndex = mesh.materialIndex;
+
+			//	// For each triangle
+			//	for (int i{}; i < static_cast<int>(node.triCount); i+=3)
+			//	{
+			//		// Set the position and normal of the current triangle to the triangle object
+			//		triangle.v0 = mesh.transformedPositions[mesh.indices[node.firstTriIdx + i]];
+			//		triangle.v1 = mesh.transformedPositions[mesh.indices[node.firstTriIdx + i + 1]];
+			//		triangle.v2 = mesh.transformedPositions[mesh.indices[node.firstTriIdx + i + 2]];
+			//		triangle.normal = mesh.transformedNormals[(node.firstTriIdx + i ) / 3];
+
+			//		// If the ray hits a triangle in the mesh, check if it is closer then the previous hit triangle
+			//		if (HitTest_Triangle(triangle, ray, curClosestHit, ignoreHitRecord))
+			//		{
+			//			hasHit = true;
+
+			//			if (ignoreHitRecord)
+			//				return;
+
+			//			// Check if the current hit is closer then the previous hit
+			//			if (hitRecord.t > curClosestHit.t)
+			//			{
+			//				hitRecord = curClosestHit;
+			//			}
+			//		}
+			//	}
+			//}
+			//else
+			//{
+			//	IntersectBVH(mesh, ray, hitRecord, hasHit, curClosestHit, node.leftNode, ignoreHitRecord);
+			//	IntersectBVH(mesh, ray, hitRecord, hasHit, curClosestHit, node.leftNode + 1, ignoreHitRecord);
+			//}
+			
+			if (node.IsLeaf() == false) // branch prediction -> it is more likely that a node will not be leaf
 			{
+				IntersectBVH(mesh, ray, hitRecord, hasHit, curClosestHit, node.leftNode, ignoreHitRecord);
+				IntersectBVH(mesh, ray, hitRecord, hasHit, curClosestHit, node.leftNode + 1, ignoreHitRecord);
+
+			}
+			else
+			{
+				
 				// Create temp triangle
 				Triangle triangle{};
 				triangle.cullMode = mesh.cullMode;
 				triangle.materialIndex = mesh.materialIndex;
 
 				// For each triangle
-				for (int i{}; i < static_cast<int>(node.triCount); i+=3)
+				for (int i{}; i < static_cast<int>(node.triCount); i += 3)
 				{
 					// Set the position and normal of the current triangle to the triangle object
 					triangle.v0 = mesh.transformedPositions[mesh.indices[node.firstTriIdx + i]];
 					triangle.v1 = mesh.transformedPositions[mesh.indices[node.firstTriIdx + i + 1]];
 					triangle.v2 = mesh.transformedPositions[mesh.indices[node.firstTriIdx + i + 2]];
-					triangle.normal = mesh.transformedNormals[(node.firstTriIdx + i ) / 3];
+					triangle.normal = mesh.transformedNormals[(node.firstTriIdx + i) / 3];
 
 					// If the ray hits a triangle in the mesh, check if it is closer then the previous hit triangle
 					if (HitTest_Triangle(triangle, ray, curClosestHit, ignoreHitRecord))
@@ -352,11 +397,6 @@ namespace dae
 						}
 					}
 				}
-			}
-			else
-			{
-				IntersectBVH(mesh, ray, hitRecord, hasHit, curClosestHit, node.leftNode, ignoreHitRecord);
-				IntersectBVH(mesh, ray, hitRecord, hasHit, curClosestHit, node.leftNode + 1, ignoreHitRecord);
 			}
 		}
 

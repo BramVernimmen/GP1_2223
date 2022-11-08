@@ -216,13 +216,15 @@ namespace dae
 			transformedNormals.reserve(normals.size());
 			
 			// transform both and store them at the right index
-			for (int i{0}; i < static_cast<int>(positions.size()); ++i)
+			//for (int i{0}; i < static_cast<int>(positions.size()); ++i)
+			for (const auto& position: positions)
 			{
-				transformedPositions.emplace_back(finalTransform.TransformPoint(positions[i]));
+				transformedPositions.emplace_back(finalTransform.TransformPoint(position));
 			}
-			for (int i{0}; i < static_cast<int>(normals.size()); ++i)
+			//for (int i{0}; i < static_cast<int>(normals.size()); ++i)
+			for (const auto& normal : normals)
 			{
-				transformedNormals.emplace_back(finalTransform.TransformVector(normals[i]).Normalized());
+				transformedNormals.emplace_back(finalTransform.TransformVector(normal).Normalized());
 			}
 
 			//UpdateTransformedAABB(finalTransform);
@@ -425,11 +427,11 @@ namespace dae
 			int leftCount{ 0 };
 			int rightCount{ 0 };
 
-			for (unsigned int i{ 0 }; i < node.triCount / 3; ++i)
+			for (unsigned int i{ 0 }; i < node.triCount; i += 3)
 			{
-				const Vector3 v0{ transformedPositions[indices[i * 3]] };
-				const Vector3 v1{ transformedPositions[indices[i * 3 + 1]] };
-				const Vector3 v2{ transformedPositions[indices[i * 3 + 2]] };
+				const Vector3 v0{ transformedPositions[indices[i]] };
+				const Vector3 v1{ transformedPositions[indices[i + 1]] };
+				const Vector3 v2{ transformedPositions[indices[i + 2]] };
 				const Vector3 centroid{ (v0 + v1 + v2) * 0.3333f };
 
 				if (centroid[axis] < pos)

@@ -71,7 +71,6 @@ namespace dae
 			// using a lot of if statements might not be optimal
 
 			const float speedMultiplier{ 4.0f };
-			const int speedState{ (pKeyboardState[SDL_SCANCODE_LSHIFT] || pKeyboardState[SDL_SCANCODE_RSHIFT]) };
 			// Speeding up all movement
 			//if (pKeyboardState[SDL_SCANCODE_LSHIFT] || pKeyboardState[SDL_SCANCODE_RSHIFT])
 			//{
@@ -79,13 +78,15 @@ namespace dae
 			//	rotationSpeed *= 4.f;
 			//}
 			// no if statement
-			movementSpeed += movementSpeed * speedMultiplier * speedState;
-			rotationSpeed += rotationSpeed * speedMultiplier * speedState;
+			movementSpeed += movementSpeed * speedMultiplier * (pKeyboardState[SDL_SCANCODE_LSHIFT] || pKeyboardState[SDL_SCANCODE_RSHIFT]);
+			rotationSpeed += rotationSpeed * speedMultiplier * (pKeyboardState[SDL_SCANCODE_LSHIFT] || pKeyboardState[SDL_SCANCODE_RSHIFT]);
 
 			// In/decreasing FOV -> might not really be optimal, yet nesting if statements might be the easiest
-			if (pKeyboardState[SDL_SCANCODE_LEFT] || pKeyboardState[SDL_SCANCODE_RIGHT])
+			// currently disabled since not needed for assignment
+
+			/*if (pKeyboardState[SDL_SCANCODE_O] || pKeyboardState[SDL_SCANCODE_P])
 			{
-				if (pKeyboardState[SDL_SCANCODE_LEFT])
+				if (pKeyboardState[SDL_SCANCODE_O])
 				{
 					if (fovAngle > 0.5f)
 					{
@@ -93,7 +94,7 @@ namespace dae
 						UpdateFOV();
 					}
 				}
-				else if (pKeyboardState[SDL_SCANCODE_RIGHT])
+				else
 				{
 					if (fovAngle < 179.5f)
 					{
@@ -101,16 +102,16 @@ namespace dae
 						UpdateFOV();
 					}
 				}
-			}
+			}*/
 			
 
 			// Moving origin with "WASD"
 			// updates with no more if statements
 
-			origin += forward * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_W]);
-			origin -= forward * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_S]);
-			origin += right * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_D]);
-			origin -= right * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_A]);
+			origin += forward * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_W] || pKeyboardState[SDL_SCANCODE_UP]);
+			origin -= forward * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_S] || pKeyboardState[SDL_SCANCODE_DOWN]);
+			origin += right * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_D] || pKeyboardState[SDL_SCANCODE_RIGHT]);
+			origin -= right * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_A] || pKeyboardState[SDL_SCANCODE_LEFT]);
 			
 			// not sure if this switch is more optimal
 			switch (mouseState)

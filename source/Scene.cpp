@@ -29,7 +29,7 @@ namespace dae {
 	void dae::Scene::GetClosestHit(const Ray& ray, HitRecord& closestHit) const
 	{
 		HitRecord tempHit{};
-		for (size_t i{0}; i < m_SphereGeometries.size(); ++i)
+		/*for (size_t i{0}; i < m_SphereGeometries.size(); ++i)
 		{
 			GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray, tempHit);
 			if (tempHit.t < closestHit.t)
@@ -37,49 +37,105 @@ namespace dae {
 				closestHit = tempHit;
 				closestHit.normal.Normalize();
 			}
+		}*/
+
+		for (const Sphere& currSphere : m_SphereGeometries)
+		{
+			
+			if ( GeometryUtils::HitTest_Sphere(currSphere, ray, tempHit) && tempHit.t < closestHit.t)
+			{
+				closestHit = tempHit;
+				closestHit.normal.Normalize();
+			}
 		}
 
-		for (size_t i{ 0 }; i < m_PlaneGeometries.size(); ++i)
+		/*for (size_t i{ 0 }; i < m_PlaneGeometries.size(); ++i)
 		{
 			GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray, tempHit);
 			if (tempHit.t < closestHit.t)
 			{
 				closestHit = tempHit;
 			}
+		}*/
+
+		for (const Plane& currPlane : m_PlaneGeometries)
+		{
+			
+			if (GeometryUtils::HitTest_Plane(currPlane, ray, tempHit) && tempHit.t < closestHit.t)
+			{
+				closestHit = tempHit;
+			}
+		
 		}
 		
-		for (size_t i{ 0 }; i < m_TriangleMeshGeometries.size(); ++i)
+		/*for (size_t i{ 0 }; i < m_TriangleMeshGeometries.size(); ++i)
 		{
 			GeometryUtils::HitTest_TriangleMesh(m_TriangleMeshGeometries[i], ray, tempHit);
 			if (tempHit.t < closestHit.t)
 			{
 				closestHit = tempHit;
 			}
+		}*/
+
+		for (const TriangleMesh& currTriangleMesh: m_TriangleMeshGeometries)
+		{
+			
+			if (GeometryUtils::HitTest_TriangleMesh(currTriangleMesh, ray, tempHit) && tempHit.t < closestHit.t)
+			{
+				closestHit = tempHit;
+			}
 		}
+		
+
+
 
 	}
 
 	bool Scene::DoesHit(const Ray& ray) const
 	{
-		for (size_t i{ 0 }; i < m_SphereGeometries.size(); ++i)
+		/*for (size_t i{ 0 }; i < m_SphereGeometries.size(); ++i)
 		{
 			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray))
 			{
 				return true;
 			}
-		}
+		}*/
 
-		for (size_t i{ 0 }; i < m_PlaneGeometries.size(); ++i)
+		for (const Sphere& currSphere : m_SphereGeometries)
 		{
-			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray))
+			if (GeometryUtils::HitTest_Sphere(currSphere, ray))
 			{
 				return true;
 			}
 		}
 
-		for (size_t i{ 0 }; i < m_TriangleMeshGeometries.size(); ++i)
+		/*for (size_t i{ 0 }; i < m_PlaneGeometries.size(); ++i)
+		{
+			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray))
+			{
+				return true;
+			}
+		}*/
+
+		for (const Plane& currPlane : m_PlaneGeometries)
+		{
+			if (GeometryUtils::HitTest_Plane(currPlane, ray))
+			{
+				return true;
+			}
+		}
+
+		/*for (size_t i{ 0 }; i < m_TriangleMeshGeometries.size(); ++i)
 		{
 			if (GeometryUtils::HitTest_TriangleMesh(m_TriangleMeshGeometries[i], ray))
+			{
+				return true;
+			}
+		}*/
+
+		for (const TriangleMesh& currTriangleMesh : m_TriangleMeshGeometries)
+		{
+			if (GeometryUtils::HitTest_TriangleMesh(currTriangleMesh, ray))
 			{
 				return true;
 			}
