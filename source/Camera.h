@@ -17,13 +17,13 @@ namespace dae
 			origin{_origin},
 			fovAngle{_fovAngle}
 		{
-			UpdateFOVScaleFactor();
+			UpdateFOV();
 		}
 
 
 		Vector3 origin{};
 		float fovAngle{90.f};
-		float fovScaleFactor{ 0.f }; 
+		float fov{ 0.f }; 
 
 		Vector3 forward{Vector3::UnitZ};
 		//Vector3 forward{0.266f, -0.453f, 0.860f};
@@ -39,15 +39,18 @@ namespace dae
 
 		Matrix CalculateCameraToWorld()
 		{
-			Vector3 tempRight{ (Vector3::Cross(Vector3::UnitY, forward)) };
+			/*Vector3 tempRight{ (Vector3::Cross(Vector3::UnitY, forward)) };
 			tempRight.Normalize();
 			Vector3 tempUp{ (Vector3::Cross(forward, tempRight)) };
 			tempUp.Normalize();
 
 			right = tempRight;
-			up = tempUp;
+			up = tempUp;*/
 
-			cameraToWorld = { {tempRight},{tempUp},{forward},{origin} };
+			right = Vector3::Cross(Vector3::UnitY, forward).Normalized();
+			up = Vector3::Cross(forward, right).Normalized();
+
+			cameraToWorld = { {right},{up},{forward},{origin}};
 			return cameraToWorld;
 		}
 
@@ -67,31 +70,39 @@ namespace dae
 
 			// using a lot of if statements might not be optimal
 
-
+			const float speedMultiplier{ 4.0f };
+			const int speedState{ (pKeyboardState[SDL_SCANCODE_LSHIFT] || pKeyboardState[SDL_SCANCODE_RSHIFT]) };
 			// Speeding up all movement
-			if (pKeyboardState[SDL_SCANCODE_LSHIFT] || pKeyboardState[SDL_SCANCODE_RSHIFT])
-			{
-				movementSpeed *= 4.f;
-				rotationSpeed *= 4.f;
-			}
+			//if (pKeyboardState[SDL_SCANCODE_LSHIFT] || pKeyboardState[SDL_SCANCODE_RSHIFT])
+			//{
+			//	movementSpeed *= 4.f;
+			//	rotationSpeed *= 4.f;
+			//}
+			// no if statement
+			movementSpeed += movementSpeed * speedMultiplier * speedState;
+			rotationSpeed += rotationSpeed * speedMultiplier * speedState;
 
-			// In/decreasing FOV
-			if (pKeyboardState[SDL_SCANCODE_LEFT])
+			// In/decreasing FOV -> might not really be optimal, yet nesting if statements might be the easiest
+			if (pKeyboardState[SDL_SCANCODE_LEFT] || pKeyboardState[SDL_SCANCODE_RIGHT])
 			{
-				if (fovAngle > 0.5f)
+				if (pKeyboardState[SDL_SCANCODE_LEFT])
 				{
-					fovAngle -= movementSpeed * deltaTime;
-					UpdateFOVScaleFactor();
+					if (fovAngle > 0.5f)
+					{
+						fovAngle -= movementSpeed * deltaTime;
+						UpdateFOV();
+					}
+				}
+				else if (pKeyboardState[SDL_SCANCODE_RIGHT])
+				{
+					if (fovAngle < 179.5f)
+					{
+						fovAngle += movementSpeed * deltaTime;
+						UpdateFOV();
+					}
 				}
 			}
-			else if (pKeyboardState[SDL_SCANCODE_RIGHT])
-			{
-				if (fovAngle < 179.5f)
-				{
-					fovAngle += movementSpeed * deltaTime;
-					UpdateFOVScaleFactor();
-				}
-			}
+			
 
 			// Moving origin with "WASD"
 			// updates with no more if statements
@@ -101,34 +112,50 @@ namespace dae
 			origin += right * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_D]);
 			origin -= right * (movementSpeed * deltaTime) * (pKeyboardState[SDL_SCANCODE_A]);
 			
-			
-			if (mouseState == SDL_BUTTON_LMASK)
+			// not sure if this switch is more optimal
+			switch (mouseState)
 			{
-				
-				origin += forward * -(static_cast<float>(mouseY) * movementSpeed * deltaTime) ;
+			case SDL_BUTTON_LMASK:
+				origin += forward * -(static_cast<float>(mouseY) * movementSpeed * deltaTime);
 				totalYaw += static_cast<float>(mouseX) * rotationSpeed * deltaTime;
-			}
-			else if (mouseState == SDL_BUTTON_RMASK)
-			{
+				break;
+			case SDL_BUTTON_RMASK:
 				totalYaw += static_cast<float>(mouseX) * rotationSpeed * deltaTime;
 				totalPitch += -(static_cast<float>(mouseY)) * rotationSpeed * deltaTime;
-
+				break;
+			case SDL_BUTTON_LMASK | SDL_BUTTON_RMASK:
+				origin += up * -((movementSpeed / 2.f) * static_cast<float>(mouseY) * deltaTime);
+				break;
 			}
-			else if (mouseState == (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK))
-			{
-				origin += up * -((movementSpeed / 2.f ) * static_cast<float>(mouseY) * deltaTime);
-			}
 
-			Matrix finalRotation = Matrix::CreateRotation(totalPitch, totalYaw, 0.f);
+			//if (mouseState == SDL_BUTTON_LMASK)
+			//{
+			//	
+			//	origin += forward * -(static_cast<float>(mouseY) * movementSpeed * deltaTime) ;
+			//	totalYaw += static_cast<float>(mouseX) * rotationSpeed * deltaTime;
+			//}
+			//else if (mouseState == SDL_BUTTON_RMASK)
+			//{
+			//	totalYaw += static_cast<float>(mouseX) * rotationSpeed * deltaTime;
+			//	totalPitch += -(static_cast<float>(mouseY)) * rotationSpeed * deltaTime;
+			//
+			//}
+			//else if (mouseState == (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK))
+			//{
+			//	origin += up * -((movementSpeed / 2.f ) * static_cast<float>(mouseY) * deltaTime);
+			//}
+
+			//Matrix finalRotation = Matrix::CreateRotation(totalPitch, totalYaw, 0.f);
+			const Matrix finalRotation{Matrix::CreateRotationX(totalPitch) * Matrix::CreateRotationY(totalYaw)};
 
 			forward = finalRotation.TransformVector(Vector3::UnitZ);
 			forward.Normalize();
 			
 		}
 
-		void UpdateFOVScaleFactor()
+		void UpdateFOV()
 		{
-			fovScaleFactor = tanf(fovAngle * TO_RADIANS / 2);
+			fov = tanf(fovAngle * TO_RADIANS / 2);
 		}
 	};
 }

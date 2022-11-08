@@ -565,6 +565,7 @@ namespace dae
 	{
 		Vector3 origin{};
 		Vector3 direction{};
+		Vector3 inverseDirection{};
 
 		float min{ 0.0001f };
 		float max{ FLT_MAX };

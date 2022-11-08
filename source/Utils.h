@@ -291,21 +291,22 @@ namespace dae
 		inline bool IntersectAABB(const Ray& ray, const Vector3& minAABB, const Vector3& maxAABB)
 		{
 			// const Vector3 inversedDirection{ 1.0f / ray.direction.x, 1.0f / ray.direction.y, 1.0f / ray.direction.z }; -> more fps?
+			// old -> / ray.direction...
 
-			const float tx1 = (minAABB.x - ray.origin.x) / ray.direction.x;
-			const float tx2 = (maxAABB.x - ray.origin.x) / ray.direction.x;
+			const float tx1 = (minAABB.x - ray.origin.x) * ray.inverseDirection.x;
+			const float tx2 = (maxAABB.x - ray.origin.x) * ray.inverseDirection.x;
 
 			float tmin = std::min(tx1, tx2);
 			float tmax = std::max(tx1, tx2);
 
-			const float ty1 = (minAABB.y - ray.origin.y) / ray.direction.y;
-			const float ty2 = (maxAABB.y - ray.origin.y) / ray.direction.y;
+			const float ty1 = (minAABB.y - ray.origin.y) * ray.inverseDirection.y;
+			const float ty2 = (maxAABB.y - ray.origin.y) * ray.inverseDirection.y;
 
 			tmin = std::max(tmin, std::min(ty1, ty2));
 			tmax = std::min(tmax, std::max(ty1, ty2));
 
-			const float tz1 = (minAABB.z - ray.origin.z) / ray.direction.z;
-			const float tz2 = (maxAABB.z - ray.origin.z) / ray.direction.z;
+			const float tz1 = (minAABB.z - ray.origin.z) * ray.inverseDirection.z;
+			const float tz2 = (maxAABB.z - ray.origin.z) * ray.inverseDirection.z;
 
 			tmin = std::max(tmin, std::min(tz1, tz2));
 			tmax = std::min(tmax, std::max(tz1, tz2));

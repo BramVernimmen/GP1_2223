@@ -182,7 +182,7 @@ namespace dae {
 	{
 		m_Camera.origin = { 0.f, 3.f, -9.f };
 		m_Camera.fovAngle = 45.f;
-		m_Camera.UpdateFOVScaleFactor();
+		m_Camera.UpdateFOV();
 
 		//default: Material id0 >> SolidColor Material (RED)
 		constexpr unsigned char matId_Solid_Red = 0;
@@ -217,7 +217,7 @@ namespace dae {
 	{
 		m_Camera.origin = { 0.f, 1.f, -5.f };
 		m_Camera.fovAngle = 45.f;
-		m_Camera.UpdateFOVScaleFactor();
+		m_Camera.UpdateFOV();
 
 		//Materials
 		const auto matLambert_Red = AddMaterial(new Material_Lambert(colors::Red, 1.f));
@@ -242,7 +242,7 @@ namespace dae {
 	{
 		m_Camera.origin = { 0.f, 3.f, -9.f };
 		m_Camera.fovAngle = 45.f;
-		m_Camera.UpdateFOVScaleFactor();
+		m_Camera.UpdateFOV();
 
 		const auto matCT_GrayRoughMetal = AddMaterial(new Material_CookTorrence({ 0.972f, 0.960f, 0.915f }, 1.f, 1.f));
 		const auto matCT_GrayMediumMetal = AddMaterial(new Material_CookTorrence({ 0.972f, 0.960f, 0.915f }, 1.f, 0.6f));
@@ -290,7 +290,7 @@ namespace dae {
 		m_Camera.origin = { 0.f, 1.f, -5.f };
 		//m_Camera.origin = { 0.f, 1.f, 4.f };
 		m_Camera.fovAngle = 45.f;
-		m_Camera.UpdateFOVScaleFactor();
+		m_Camera.UpdateFOV();
 
 		//m_Camera.totalYaw = PI;
 
@@ -365,7 +365,7 @@ namespace dae {
 		sceneName = "Reference Scene";
 		m_Camera.origin = { 0.f, 3.f, -9.f };
 		m_Camera.fovAngle = 45.f;
-		m_Camera.UpdateFOVScaleFactor();
+		m_Camera.UpdateFOV();
 
 		const auto matCT_GrayRoughMetal = AddMaterial(new Material_CookTorrence({ 0.972f, 0.960f, 0.915f }, 1.f, 1.f));
 		const auto matCT_GrayMediumMetal = AddMaterial(new Material_CookTorrence({ 0.972f, 0.960f, 0.915f }, 1.f, 0.6f));
@@ -442,7 +442,7 @@ namespace dae {
 		sceneName = "Bunny Scene";
 		m_Camera.origin = { 0.f, 3.f, -9.f };
 		m_Camera.fovAngle = 45.f;
-		m_Camera.UpdateFOVScaleFactor();
+		m_Camera.UpdateFOV();
 
 
 		//Materials

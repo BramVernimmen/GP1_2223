@@ -2,6 +2,9 @@
 #include "SDL.h"
 #include "SDL_surface.h"
 
+#include <thread>
+#include <future> // Async Stuff
+#include <ppl.h> // Parallel Stuff
 
 //Project includes
 #include "Renderer.h"
@@ -11,11 +14,6 @@
 #include "Scene.h"
 #include "Utils.h"
 
-
-
-#include <thread>
-#include <future> // Async Stuff
-#include <ppl.h> //Parallel Stuff
 
 using namespace dae;
 
@@ -36,8 +34,6 @@ void Renderer::Render(Scene* pScene) const
 {
 	Camera& camera = pScene->GetCamera();
 	camera.CalculateCameraToWorld();
-
-	const float fov{ camera.fovScaleFactor };
 
 	auto& materials = pScene->GetMaterials();
 	auto& lights = pScene->GetLights();
@@ -71,7 +67,7 @@ void Renderer::Render(Scene* pScene) const
 					const uint32_t pixelIndexEnd = currPixelIndex + taskSize;
 					for (uint32_t pixelIndex{ currPixelIndex }; pixelIndex < pixelIndexEnd; ++pixelIndex)
 					{
-						RenderPixel(pScene, pixelIndex, fov, m_AspectRatio, camera, lights, materials);
+						RenderPixel(pScene, pixelIndex, camera, lights, materials);
 					}
 				})
 		);
@@ -91,7 +87,7 @@ void Renderer::Render(Scene* pScene) const
 	concurrency::parallel_for(0u, numPixels,
 		[=, this](int i)
 		{
-			RenderPixel(pScene, i, fov, m_AspectRatio, camera, lights, materials);
+			RenderPixel(pScene, i, camera, lights, materials);
 		});
 
 #else 
@@ -99,7 +95,7 @@ void Renderer::Render(Scene* pScene) const
 	//Synchronous Logic
 	for (uint32_t i{0}; i < numPixels; ++i)
 	{
-		RenderPixel(pScene, i, fov, m_AspectRatio, camera, lights, materials);
+		RenderPixel(pScene, i, camera, lights, materials);
 	}
 
 #endif
@@ -112,18 +108,18 @@ void Renderer::Render(Scene* pScene) const
 	SDL_UpdateWindowSurface(m_pWindow);
 }
 
-void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float aspectRatio, const Camera& camera, const std::vector<Light>& lights, const std::vector<Material*>& materials) const
+void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, const Camera& camera, const std::vector<Light>& lights, const std::vector<Material*>& materials) const
 {
 	const int px = pixelIndex % m_Width;
 	const int py = pixelIndex / m_Width;
 
-	float cx{ ((2.f * (px + 0.5f)) / m_Width - 1) * aspectRatio * fov };
-	float cy{ (1.f - ((2.f * (py + 0.5f)) / m_Height)) * fov };
+	const float cx{ ((2.f * (px + 0.5f)) / m_Width - 1) * m_AspectRatio * camera.fov };
+	const float cy{ (1.f - ((2.f * (py + 0.5f)) / m_Height)) * camera.fov };
 
 	Vector3 rayDirection{ cx, cy , 1 };
 	rayDirection = camera.cameraToWorld.TransformVector(rayDirection).Normalized();
 
-	Ray viewRay{ camera.origin, rayDirection };
+	Ray viewRay{ camera.origin, rayDirection, {1.0f / rayDirection.x, 1.0f / rayDirection.y, 1.0f / rayDirection.z} };
 
 	ColorRGB finalColor{};
 
@@ -138,15 +134,12 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, f
 		{
 			Vector3 lightDirection{ LightUtils::GetDirectionToLight(lights[i], originOffset) };
 			const float lightDistance{ lightDirection.Normalize() }; // normalizing the vector returns the distance
-			float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection) }; // angle between normal and light direction (cosine theta)
-
+			//const float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection) }; // angle between normal and light direction (cosine theta)
+			// --> moved the normalLightAngle into the switch so it isn't calculated when not needed
 
 			if (m_ShadowsEnabled)
 			{
-				Ray invLightRay{originOffset, lightDirection, 0.0f, lightDistance}; // W2 slide 25
-				//invLightRay.max = lightDistance;
-				//invLightRay.origin = originOffset;
-				//invLightRay.direction = lightDirection;
+				Ray invLightRay{ originOffset, lightDirection, {1.0f / lightDirection.x, 1.0f / lightDirection.y, 1.0f / lightDirection.z} , 0.0f, lightDistance }; // W2 slide 25
 
 				if (pScene->DoesHit(invLightRay))
 					continue;
@@ -156,10 +149,15 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, f
 			switch (m_CurrentLightingMode)
 			{
 			case dae::Renderer::LightingMode::ObservedArea:
+			{
+
+				const float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection) }; // angle between normal and light direction (cosine theta)
+
 				if (normalLightAngle < 0)
 					continue;
 				// only multiply if normalLightAngle is bigger then 0, replacement of if statement
 				finalColor += ColorRGB{ normalLightAngle, normalLightAngle, normalLightAngle };
+			}
 				break;
 			case dae::Renderer::LightingMode::Radiance:
 				finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin);
@@ -169,6 +167,8 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, f
 				break;
 			case dae::Renderer::LightingMode::Combined:
 			{
+				const float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection) }; // angle between normal and light direction (cosine theta)
+
 				// formula getting too long, making variables...
 				if (normalLightAngle < 0)
 					continue;
@@ -178,13 +178,8 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, f
 
 				finalColor += radiance * brdf * normalLightAngle;
 			}
-			break;
+				break;
 			}
-
-
-
-
-
 
 		}
 	}

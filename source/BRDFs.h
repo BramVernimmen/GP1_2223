@@ -32,13 +32,17 @@ namespace dae
 		 */
 		static ColorRGB Phong(float ks, float exp, const Vector3& l, const Vector3& v, const Vector3& n)
 		{
-			const Vector3 reflect{ l - 2 * (Vector3::Dot(n, l)) * n };
-			float angleViewReflect{ Vector3::Dot(reflect, v) }; // angle between the reflect and view
+			//const Vector3 reflect{ l - 2 * (Vector3::Dot(n, l)) * n };
+			const Vector3 reflect{ Vector3::Reflect(l,n)};
+			float angleViewReflect{ std::max(Vector3::Dot(reflect, v), 0.0f) }; // angle between the reflect and view
+			// -> max out angleViewReflect to be at least 0, this will spare an if statement
 			// value can't be negative; fix if it is...
-			if (angleViewReflect < 0)
-				return ColorRGB{ 0.f,0.f,0.f };
+			//if (angleViewReflect < 0)
+			//	return ColorRGB{ 0.f,0.f,0.f };
+			const float phongValue{ ks * powf(angleViewReflect, exp) };
 
-			return ColorRGB{1.f, 1.f, 1.f} * (ks * powf(angleViewReflect, exp));
+			//return ColorRGB{1.f, 1.f, 1.f} * (ks * powf(angleViewReflect, exp));
+			return ColorRGB{ phongValue, phongValue, phongValue };
 		}
 
 		/**
