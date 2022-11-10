@@ -483,7 +483,7 @@ namespace dae {
 	{
 		Scene::Update(pTimer);
 
-		const auto yawAngle = (cos(pTimer->GetTotal()) + 1.0f) / 2.0f * PI_2;
+		const auto yawAngle = (cos(pTimer->GetTotal()) + 1.0f) * 0.5f * PI_2;
 		for (const auto m : m_Meshes)
 		{
 			m->RotateY(yawAngle);
@@ -540,7 +540,7 @@ namespace dae {
 		// TODO - remove comments, used for testing
 		Scene::Update(pTimer);
 		
-		const auto yawAngle = (cos(pTimer->GetTotal()) + 1.0f) / 2.0f * PI_2;
+		const auto yawAngle = (cos(pTimer->GetTotal()) + 1.0f) * 0.5f * PI_2;
 		pMesh->RotateY(yawAngle);
 		pMesh->UpdateTransforms();
 	}
