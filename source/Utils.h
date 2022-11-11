@@ -4,6 +4,8 @@
 #include "Math.h"
 #include "DataTypes.h"
 
+#define MAYA_IMPORT
+
 namespace dae
 {
 	namespace GeometryUtils
@@ -73,7 +75,7 @@ namespace dae
 			//  ----------- NEW CODE -------------------------------------------------
 			// using the info from fxMath - week 01: Ray sphere intersection 2D
 			//const float sphereRadSqr{ sphere.radius * sphere.radius }; // used multiple times, saves a little bit -> apperently doesn't work
-			//
+			
 			const Vector3 tc{ sphere.origin - ray.origin }; // vector from ray origin to center of sphere
 			const float dp{ Vector3::Dot(tc, ray.direction) }; // this will give us the lenght of the TP side of the triangle;
 			// P is the perpendicular projection of point C on the ray
@@ -95,10 +97,10 @@ namespace dae
 
 			if (ignoreHitRecord) return true;
 
-			const Vector3 intersectPoint{ ray.origin + t * ray.direction };
+			//const Vector3 intersectPoint{ ray.origin + t * ray.direction };
 			hitRecord.t = t;
-			hitRecord.origin = intersectPoint;
-			hitRecord.normal = (intersectPoint - sphere.origin);
+			hitRecord.origin = ray.origin + t * ray.direction;
+			hitRecord.normal = (hitRecord.origin - sphere.origin);
 			hitRecord.materialIndex = sphere.materialIndex;
 			hitRecord.didHit = true;
 			return true;
@@ -524,7 +526,22 @@ namespace dae
 				else if (sCommand == "f")
 				{
 					float i0, i1, i2;
+
+#if defined(MAYA_IMPORT)
+					// code used from Sander De Keukelaere
+					// first asked and got permission to do so
+					// this code will only be used to import the extra scene from maya
+					std::string s0, s1, s2;
+					file >> s0 >> s1 >> s2;
+					const char delimiter{ '/' };
+					if (!(s0.size() > 0 && s1.size() > 0 && s2.size() > 0)) continue;
+					i0 = std::stof(s0.substr(0, s0.find(delimiter)));
+					i1 = std::stof(s1.substr(0, s1.find(delimiter)));
+					i2 = std::stof(s2.substr(0, s2.find(delimiter)));
+#else
 					file >> i0 >> i1 >> i2;
+#endif
+
 
 					indices.push_back((int)i0 - 1);
 					indices.push_back((int)i1 - 1);

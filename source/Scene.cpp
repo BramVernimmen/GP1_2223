@@ -29,15 +29,6 @@ namespace dae {
 	void dae::Scene::GetClosestHit(const Ray& ray, HitRecord& closestHit) const
 	{
 		HitRecord tempHit{};
-		/*for (size_t i{0}; i < m_SphereGeometries.size(); ++i)
-		{
-			GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray, tempHit);
-			if (tempHit.t < closestHit.t)
-			{
-				closestHit = tempHit;
-				closestHit.normal.Normalize();
-			}
-		}*/
 
 		for (const Sphere& currSphere : m_SphereGeometries)
 		{
@@ -49,14 +40,6 @@ namespace dae {
 			}
 		}
 
-		/*for (size_t i{ 0 }; i < m_PlaneGeometries.size(); ++i)
-		{
-			GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray, tempHit);
-			if (tempHit.t < closestHit.t)
-			{
-				closestHit = tempHit;
-			}
-		}*/
 
 		for (const Plane& currPlane : m_PlaneGeometries)
 		{
@@ -68,14 +51,6 @@ namespace dae {
 		
 		}
 		
-		/*for (size_t i{ 0 }; i < m_TriangleMeshGeometries.size(); ++i)
-		{
-			GeometryUtils::HitTest_TriangleMesh(m_TriangleMeshGeometries[i], ray, tempHit);
-			if (tempHit.t < closestHit.t)
-			{
-				closestHit = tempHit;
-			}
-		}*/
 
 		for (const TriangleMesh& currTriangleMesh: m_TriangleMeshGeometries)
 		{
@@ -539,10 +514,66 @@ namespace dae {
 	{
 		// TODO - remove comments, used for testing
 		Scene::Update(pTimer);
-		
+
 		const auto yawAngle = (cos(pTimer->GetTotal()) + 1.0f) * 0.5f * PI_2;
 		pMesh->RotateY(yawAngle);
 		pMesh->UpdateTransforms();
 	}
+#pragma region SCENE W4 EXTRASCENE
+	void Scene_W4_ExtraScene::Initialize()
+	{
+		sceneName = "Bunny Scene";
+		m_Camera.origin = { -2.f, 2.f, -8.f };
+		m_Camera.fovAngle = 45.f;
+		m_Camera.UpdateFOV();
+		m_Camera.totalPitch = -15.f * TO_RADIANS / 2;
+		m_Camera.totalYaw = 20.f * TO_RADIANS / 2;
+
+
+		//Materials
+		const auto matLambert_GrayBlue = AddMaterial(new Material_Lambert({ 0.49f, 0.57f, 0.57f }, 1.f));
+		const auto matLambert_White = AddMaterial(new Material_Lambert(colors::White, 1.f));
+
+		//Plane
+		AddPlane(Vector3{ 0.f, 0.f, 10.f }, { 0.f, 0.f,-1.f }, matLambert_GrayBlue); // BACK
+		AddPlane(Vector3{ 0.f, 0.f, 0.f }, { 0.f, 1.f,0.f }, matLambert_GrayBlue); // BOTTOM
+		AddPlane(Vector3{ 0.f, 10.f, 0.f }, { 0.f, -1.f,0.f }, matLambert_GrayBlue); // TOP
+		AddPlane(Vector3{ 5.f, 0.f, 0.f }, { -1.f, 0.f,0.f }, matLambert_GrayBlue); // RIGHT
+		AddPlane(Vector3{ -5.f, 0.f, 0.f }, { 1.f, 0.f,0.f }, matLambert_GrayBlue); // LEFT
+
+
+		//Bunny Object
+		pMesh = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matLambert_White);
+		Utils::ParseOBJ("Resources/Honda_S2000_LowPoly.obj",
+			pMesh->positions,
+			pMesh->normals,
+			pMesh->indices);
+
+		pMesh->pBvhNodes = new BVHNode[pMesh->indices.size()]{};
+
+		//pMesh->Scale({ 2.f, 2.f, 2.f });
+
+		//pMesh->UpdateAABB();
+		pMesh->UpdateTransforms();
+
+
+		//Light
+		AddPointLight(Vector3{ 0.f, 5.f, 5.f }, 50.f, ColorRGB{ 1.f, 0.61f, 0.45f }); // Backlight
+		AddPointLight(Vector3{ -2.5f, 5.0f, -5.f }, 70.f, ColorRGB{ 1.f, 0.8f, 0.45f }); //Front Light Left
+		AddPointLight(Vector3{ 2.5f, 2.5f, -5.f }, 50.f, ColorRGB{ 0.74f, 0.67f, 0.68f });
+		//AddPointLight(Vector3{ 2.5f, 2.5f, -5.f }, 50.f, ColorRGB{ 0.34f, 0.47f, 0.68f });
+
+	}
+
+	//void Scene_W4_ExtraScene::Update(Timer* pTimer)
+	//{
+	//	// TODO - remove comments, used for testing
+	//	Scene::Update(pTimer);
+	//	
+	//	const auto yawAngle = (cos(pTimer->GetTotal()) + 1.0f) * 0.5f * PI_2;
+	//	pMesh->RotateY(yawAngle);
+	//	pMesh->UpdateTransforms();
+	//}
+
 #pragma endregion
 }

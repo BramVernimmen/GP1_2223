@@ -52,6 +52,7 @@ int main(int argc, char* args[])
 	//const auto pScene = new Scene_W4_TestScene();
 	const auto pScene = new Scene_W4_ReferenceScene();
 	//const auto pScene = new Scene_W4_BunnyScene();
+	//const auto pScene = new Scene_W4_ExtraScene();
 
 	pScene->Initialize();
 

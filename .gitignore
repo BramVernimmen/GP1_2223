@@ -2,3 +2,4 @@ bin/
 TempFiles/
 .vs/
 source/benchmark.txt
+source/RayTracing_Buffer.bmp
