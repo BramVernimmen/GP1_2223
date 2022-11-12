@@ -34,9 +34,6 @@ namespace dae {
 	{
 		const float m = Magnitude();
 		const float invM = 1.0f / m;
-		//x /= m;
-		//y /= m;
-		//z /= m;
 		x *= invM;
 		y *= invM;
 		z *= invM;
@@ -49,7 +46,6 @@ namespace dae {
 		const float m = Magnitude();
 		const float invM = 1.0f / m;
 
-		//return { x / m, y / m, z / m };
 		return { x * invM, y * invM, z * invM };
 	}
 

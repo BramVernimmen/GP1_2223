@@ -40,7 +40,6 @@ namespace dae {
 			}
 		}
 
-
 		for (const Plane& currPlane : m_PlaneGeometries)
 		{
 			
@@ -51,7 +50,6 @@ namespace dae {
 		
 		}
 		
-
 		for (const TriangleMesh& currTriangleMesh: m_TriangleMeshGeometries)
 		{
 			
@@ -60,22 +58,10 @@ namespace dae {
 				closestHit = tempHit;
 			}
 		}
-		
-
-
-
 	}
 
 	bool Scene::DoesHit(const Ray& ray) const
 	{
-		/*for (size_t i{ 0 }; i < m_SphereGeometries.size(); ++i)
-		{
-			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray))
-			{
-				return true;
-			}
-		}*/
-
 		for (const Sphere& currSphere : m_SphereGeometries)
 		{
 			if (GeometryUtils::HitTest_Sphere(currSphere, ray))
@@ -84,14 +70,6 @@ namespace dae {
 			}
 		}
 
-		/*for (size_t i{ 0 }; i < m_PlaneGeometries.size(); ++i)
-		{
-			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray))
-			{
-				return true;
-			}
-		}*/
-
 		for (const Plane& currPlane : m_PlaneGeometries)
 		{
 			if (GeometryUtils::HitTest_Plane(currPlane, ray))
@@ -99,14 +77,6 @@ namespace dae {
 				return true;
 			}
 		}
-
-		/*for (size_t i{ 0 }; i < m_TriangleMeshGeometries.size(); ++i)
-		{
-			if (GeometryUtils::HitTest_TriangleMesh(m_TriangleMeshGeometries[i], ray))
-			{
-				return true;
-			}
-		}*/
 
 		for (const TriangleMesh& currTriangleMesh : m_TriangleMeshGeometries)
 		{
@@ -522,7 +492,7 @@ namespace dae {
 #pragma region SCENE W4 EXTRASCENE
 	void Scene_W4_ExtraScene::Initialize()
 	{
-		sceneName = "Bunny Scene";
+		sceneName = "Extra Scene";
 		m_Camera.origin = { -2.f, 2.f, -8.f };
 		m_Camera.fovAngle = 45.f;
 		m_Camera.UpdateFOV();

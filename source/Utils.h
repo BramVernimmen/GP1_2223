@@ -14,67 +14,8 @@ namespace dae
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			// ----------- OLD CODE -------------------------------------------------
-			// calculating this prior, reused a lot
-			//const Vector3 raySphereOriginVector{ ray.origin - sphere.origin };
-
-			//const float a{ Vector3::Dot(ray.direction, ray.direction) };
-			//const float b{ Vector3::Dot((2.f * ray.direction), raySphereOriginVector) };
-			//const float c{ Vector3::Dot(raySphereOriginVector, raySphereOriginVector) - (sphere.radius * sphere.radius) };
-
-			//float discriminant{ (b * b) - 4.f * a * c };
-
-			//if (discriminant < 0)
-			//{
-			//	return false;
-			//}
-
-			//// take square root of discriminant
-			//discriminant = sqrt(discriminant);
-
-
-			//// calculating distance
-			//float t{ (- b - discriminant) / (2.f * a)};
-
-			//if (t <= ray.min || t > ray.max) // check if distance is outside of range
-			//{
-			//	// first result is out of range if we get here
-			//	t = ((- b + discriminant) / (2.f * a));
-			//	if (t <= ray.min || t > ray.max)
-			//	{
-			//		return false; // both are out of range; nothing is visible
-			//	}
-			//}
-
-
-			//// explanation:
-			//// if we take a look at { -b - discriminant / (2.f * a) } and { -b + discriminant / (2.f * a) }
-			//// the square root of a value will always be positive
-			//// if we subtract this value, the result will always be smaller than the addition
-			//// meaning that if we first check the subtraction and it is in range, it will be the smallest possible
-
-
-
-			//// code underneath just confuses me, currently keeping it out
-			////// if need to be ignored, just return
-			////if (ignoreHitRecord)
-			////{
-			////	return true; // false removes shading
-			////}
-
-
-			//// calculate the hitRecord info
-			//hitRecord.t = t;
-			//hitRecord.origin = ray.origin + (ray.direction * hitRecord.t);
-			//hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
-			//hitRecord.materialIndex = sphere.materialIndex;
-			//hitRecord.didHit = true;
-
-			//return true;
-
 			//  ----------- NEW CODE -------------------------------------------------
 			// using the info from fxMath - week 01: Ray sphere intersection 2D
-			//const float sphereRadSqr{ sphere.radius * sphere.radius }; // used multiple times, saves a little bit -> apperently doesn't work
 			
 			const Vector3 tc{ sphere.origin - ray.origin }; // vector from ray origin to center of sphere
 			const float dp{ Vector3::Dot(tc, ray.direction) }; // this will give us the lenght of the TP side of the triangle;
@@ -179,34 +120,6 @@ namespace dae
 				break;
 			}
 
-			//--------------OLD CODE------------------------------------------------------------------
-
-			//const Vector3 length = ((triangle.v0 + triangle.v1 + triangle.v2) / 3) - ray.origin; // length between triangle center and viewray
-			//const float t = Vector3::Dot(length, triangle.normal) / Vector3::Dot(ray.direction, triangle.normal);
-
-
-			// check if t is in range
-			//if (t < ray.min || t >= ray.max)
-			//	return false;
-
-			//const Vector3 p = ray.origin + t * ray.direction;
-			//
-			//const Vector3 edgeA = triangle.v1 - triangle.v0;
-			//const Vector3 edgeB = triangle.v2 - triangle.v1;
-			//const Vector3 edgeC = triangle.v0 - triangle.v2;
-			//const Vector3 pointToSideA = p - triangle.v0;
-			//const Vector3 pointToSideB = p - triangle.v1;
-			//const Vector3 pointToSideC = p - triangle.v2;
-			//if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeA, pointToSideA)) < 0)
-			//	return false;
-			//if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeB, pointToSideB)) < 0)
-			//	return false;
-			//if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeC, pointToSideC)) < 0)
-			//	return false;
-
-
-
-
 			//--------------NEW CODE------------------------------------------------------------------
 
 			// Code was made possible thanks to: https://www.youtube.com/watch?v=fK1RPmF_zjQ - watch part from 6.30 min - 13.00 min
@@ -250,8 +163,6 @@ namespace dae
 			hitRecord.didHit = true;
 			
 
-			//hitRecord.origin = ray.origin + (ray.direction * t);
-			//hitRecord.t = t;
 
 
 			return true;
@@ -265,31 +176,7 @@ namespace dae
 		}
 #pragma endregion
 #pragma region TriangeMesh HitTest
-		// OLD SLABTEST  --> basically the same as IntersectAABB, but this one uses mesh, the other will get the min and max as parameters
-		//inline bool SlabTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)
-		//{
-		//	float tx1 = (mesh.transformedMinAABB.x - ray.origin.x) / ray.direction.x;
-		//	float tx2 = (mesh.transformedMaxAABB.x - ray.origin.x) / ray.direction.x;
-		//
-		//	float tmin = std::min(tx1, tx2);
-		//	float tmax = std::max(tx1, tx2);
-		//
-		//	float ty1 = (mesh.transformedMinAABB.y - ray.origin.y) / ray.direction.y;
-		//	float ty2 = (mesh.transformedMaxAABB.y - ray.origin.y) / ray.direction.y;
-		//
-		//	tmin = std::max(tmin, std::min(ty1, ty2));
-		//	tmax = std::min(tmin, std::max(ty1, ty2));
-		//
-		//	float tz1 = (mesh.transformedMinAABB.z - ray.origin.z) / ray.direction.z;
-		//	float tz2 = (mesh.transformedMaxAABB.z - ray.origin.z) / ray.direction.z;
-		//
-		//	tmin = std::max(tmin, std::min(tz1, tz2));
-		//	tmax = std::min(tmin, std::max(tz1, tz2));
-		//
-		//	return tmax > 0 && tmax >= tmin;
-		//}
-		// 
-		
+
 		inline bool IntersectAABB(const Ray& ray, const Vector3& minAABB, const Vector3& maxAABB)
 		{
 			// const Vector3 inversedDirection{ 1.0f / ray.direction.x, 1.0f / ray.direction.y, 1.0f / ray.direction.z }; -> more fps?
@@ -323,44 +210,6 @@ namespace dae
 			// Slabtest
 			if (!IntersectAABB(ray, node.minAABB, node.maxAABB)) return;
 
-			//if (node.IsLeaf())
-			//{
-			//	// Create temp triangle
-			//	Triangle triangle{};
-			//	triangle.cullMode = mesh.cullMode;
-			//	triangle.materialIndex = mesh.materialIndex;
-
-			//	// For each triangle
-			//	for (int i{}; i < static_cast<int>(node.triCount); i+=3)
-			//	{
-			//		// Set the position and normal of the current triangle to the triangle object
-			//		triangle.v0 = mesh.transformedPositions[mesh.indices[node.firstTriIdx + i]];
-			//		triangle.v1 = mesh.transformedPositions[mesh.indices[node.firstTriIdx + i + 1]];
-			//		triangle.v2 = mesh.transformedPositions[mesh.indices[node.firstTriIdx + i + 2]];
-			//		triangle.normal = mesh.transformedNormals[(node.firstTriIdx + i ) / 3];
-
-			//		// If the ray hits a triangle in the mesh, check if it is closer then the previous hit triangle
-			//		if (HitTest_Triangle(triangle, ray, curClosestHit, ignoreHitRecord))
-			//		{
-			//			hasHit = true;
-
-			//			if (ignoreHitRecord)
-			//				return;
-
-			//			// Check if the current hit is closer then the previous hit
-			//			if (hitRecord.t > curClosestHit.t)
-			//			{
-			//				hitRecord = curClosestHit;
-			//			}
-			//		}
-			//	}
-			//}
-			//else
-			//{
-			//	IntersectBVH(mesh, ray, hitRecord, hasHit, curClosestHit, node.leftNode, ignoreHitRecord);
-			//	IntersectBVH(mesh, ray, hitRecord, hasHit, curClosestHit, node.leftNode + 1, ignoreHitRecord);
-			//}
-			
 			if (node.IsLeaf() == false) // branch prediction -> it is more likely that a node will not be leaf
 			{
 				IntersectBVH(mesh, ray, hitRecord, hasHit, curClosestHit, node.leftNode, ignoreHitRecord);
@@ -404,45 +253,10 @@ namespace dae
 
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			// slabtest
-			//if (!SlabTest_TriangleMesh(mesh, ray))
-			//{
-			//	return false;
-			//}
-
-			 
-			// Create a triangle to test on
-			//Triangle triangle{};
-			//
-			//// Give triangle the same cullMode and material
-			//triangle.cullMode = mesh.cullMode;
-			//triangle.materialIndex = mesh.materialIndex;
-
 			HitRecord tempHit{};
 			bool hasHit{};
 
-			// BVH intersect
 			IntersectBVH(mesh, ray, hitRecord, hasHit, tempHit, mesh.rootNodeIdx, ignoreHitRecord);
-
-			//// loop each triangle
-			//for (int i{ 0 }; i < static_cast<int>(mesh.indices.size() / 3); ++i) // for each triangle
-			//{
-			//	// give the correct position and normal to triangle
-			//	triangle.v0 = mesh.transformedPositions[mesh.indices[i * 3]] ; // vertex 1
-			//	triangle.v1 = mesh.transformedPositions[mesh.indices[i * 3 + 1]] ; // vertex 2
-			//	triangle.v2 = mesh.transformedPositions[mesh.indices[i * 3 + 2]] ; // vertex 3
-			//	triangle.normal = mesh.transformedNormals[i];
-			//	if (GeometryUtils::HitTest_Triangle(triangle, ray, tempHit, ignoreHitRecord)) // same as in Scene.cpp -> GetClosestHit
-			//	{
-			//		if (tempHit.t < hitRecord.t)
-			//		{
-			//			hitRecord = tempHit;
-			//		}
-			//
-			//	}
-			//
-			//}
-
 
 			return hasHit;
 		}

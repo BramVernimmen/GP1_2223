@@ -36,12 +36,8 @@ namespace dae
 			const Vector3 reflect{ Vector3::Reflect(l,n)};
 			float angleViewReflect{ std::max(Vector3::Dot(reflect, v), 0.0f) }; // angle between the reflect and view
 			// -> max out angleViewReflect to be at least 0, this will spare an if statement
-			// value can't be negative; fix if it is...
-			//if (angleViewReflect < 0)
-			//	return ColorRGB{ 0.f,0.f,0.f };
 			const float phongValue{ ks * powf(angleViewReflect, exp) };
 
-			//return ColorRGB{1.f, 1.f, 1.f} * (ks * powf(angleViewReflect, exp));
 			return ColorRGB{ phongValue, phongValue, phongValue };
 		}
 

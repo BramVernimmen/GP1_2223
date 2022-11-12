@@ -146,7 +146,6 @@ namespace dae {
 
 	Matrix Matrix::CreateRotation(const Vector3& r)
 	{
-		//return CreateRotationZ(r[2]) * CreateRotationY(r[1]) * CreateRotationX(r[0]); --> makes invers when looking back or some weird stuff??
 		return CreateRotationX(r[0]) * CreateRotationY(r[1]) * CreateRotationZ(r[2]);
 	}
 

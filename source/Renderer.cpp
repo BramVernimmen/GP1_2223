@@ -135,8 +135,6 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, const Camera
 		{
 			Vector3 lightDirection{ LightUtils::GetDirectionToLight(currLight, originOffset) };
 			const float lightDistance{ lightDirection.Normalize() }; // normalizing the vector returns the distance
-			//const float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection) }; // angle between normal and light direction (cosine theta)
-			// --> moved the normalLightAngle into the switch so it isn't calculated when not needed
 
 			if (m_ShadowsEnabled)
 			{
@@ -152,11 +150,8 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, const Camera
 			case dae::Renderer::LightingMode::ObservedArea:
 			{
 
-				//const float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection) }; // angle between normal and light direction (cosine theta)
 				const float normalLightAngle{ std::max(Vector3::Dot(closestHit.normal, lightDirection), 0.0f )}; // angle between normal and light direction (cosine theta)
 
-				//if (normalLightAngle < 0)
-				//	continue;
 				// only multiply if normalLightAngle is bigger then 0, replacement of if statement
 				finalColor += ColorRGB{ normalLightAngle, normalLightAngle, normalLightAngle };
 			}
@@ -169,12 +164,9 @@ void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, const Camera
 				break;
 			case dae::Renderer::LightingMode::Combined:
 			{
-				//const float normalLightAngle{ Vector3::Dot(closestHit.normal, lightDirection)}; // angle between normal and light direction (cosine theta)
 				const float normalLightAngle{ std::max(Vector3::Dot(closestHit.normal, lightDirection), 0.0f )}; // angle between normal and light direction (cosine theta)
 
 				// formula getting too long, making variables...
-				//if (normalLightAngle < 0)
-				//	continue;
 
 				const ColorRGB radiance{ LightUtils::GetRadiance(currLight, closestHit.origin) };
 				const ColorRGB brdf{ materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, rayDirection) };

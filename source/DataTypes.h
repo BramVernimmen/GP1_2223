@@ -216,12 +216,10 @@ namespace dae
 			transformedNormals.reserve(normals.size());
 			
 			// transform both and store them at the right index
-			//for (int i{0}; i < static_cast<int>(positions.size()); ++i)
 			for (const auto& position: positions)
 			{
 				transformedPositions.emplace_back(finalTransform.TransformPoint(position));
 			}
-			//for (int i{0}; i < static_cast<int>(normals.size()); ++i)
 			for (const auto& normal : normals)
 			{
 				transformedNormals.emplace_back(finalTransform.TransformVector(normal).Normalized());
@@ -294,9 +292,7 @@ namespace dae
 		{
 			BVHNode& node = pBvhNodes[nodeIdx];
 
-			//node.minAABB = Vector3(FLT_MAX, FLT_MAX, FLT_MAX);
 			node.minAABB = Vector3::MaxFloat;
-			//node.maxAABB = Vector3(FLT_MIN, FLT_MIN, FLT_MIN);
 			node.maxAABB = Vector3::MinFloat;
 
 			// for each vertex, take min/max
