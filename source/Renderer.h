@@ -25,6 +25,8 @@ namespace dae
 		Renderer& operator=(const Renderer&) = delete;
 		Renderer& operator=(Renderer&&) noexcept = delete;
 
+		void Update() { ++m_Counter; }
+
 		void Render(Scene* pScene) const;
 
 		void RenderPixel(Scene* pScene, uint32_t pixelIndex, const Camera& camera, const std::vector<Light>& lights, const std::vector<Material*>& materials) const;
@@ -56,5 +58,7 @@ namespace dae
 		int m_Height{};
 
 		float m_AspectRatio{};
+
+		unsigned int m_Counter{};
 	};
 }

@@ -110,8 +110,11 @@ void Renderer::Render(Scene* pScene) const
 
 void dae::Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, const Camera& camera, const std::vector<Light>& lights, const std::vector<Material*>& materials) const
 {
-	const int px = pixelIndex % m_Width;
 	const int py = pixelIndex / m_Width;
+	if (py % 2 != m_Counter % 2)
+		return;
+
+	const int px = pixelIndex % m_Width;
 
 	const float cx{ ((2.f * (px + 0.5f)) / m_Width - 1) * m_AspectRatio * camera.fov };
 	const float cy{ (1.f - ((2.f * (py + 0.5f)) / m_Height)) * camera.fov };

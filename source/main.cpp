@@ -87,6 +87,7 @@ int main(int argc, char* args[])
 
 		//--------- Update ---------
 		pScene->Update(pTimer);
+		pRenderer->Update();
 
 		//--------- Render ---------
 		pRenderer->Render(pScene);
